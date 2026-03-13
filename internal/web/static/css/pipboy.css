@@ -1,0 +1,239 @@
+/* Font and base */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+::selection {
+    background: lightgreen;
+}
+
+body {
+    background: #111;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: #8df776;
+    font-weight: 400;
+    text-transform: uppercase;
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* CRT Bezel */
+.crt-bezel {
+    width: 100vw;
+    height: 100vh;
+    background:
+        /* Side ridges — subtle grooves on left and right edges */
+        repeating-linear-gradient(
+            180deg,
+            transparent,
+            transparent 8px,
+            rgba(255, 255, 255, 0.03) 8px,
+            rgba(255, 255, 255, 0.03) 9px,
+            transparent 9px,
+            transparent 12px
+        ),
+        #1a1a1a;
+    border: 3px solid #333;
+    border-radius: 12px;
+    padding: 8px;
+    position: relative;
+}
+
+.bezel-label {
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #d8c99e;
+    padding: 8px 0;
+    text-shadow: 0 0 6px rgba(216, 201, 158, 0.5);
+    /* Ridge underline */
+    border-bottom: 1px solid #333;
+    margin-bottom: 2px;
+    box-shadow: 0 1px 0 #222, 0 2px 0 #333;
+}
+
+/* Corner bolts on bezel */
+.crt-bezel::before,
+.crt-bezel::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #777, #444 60%, #333);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+    z-index: 20;
+}
+
+.crt-bezel::before {
+    top: 10px;
+    left: 10px;
+    /* Second bolt via box-shadow clone positioned at top-right */
+    box-shadow:
+        0 0 2px rgba(0, 0, 0, 0.6),
+        calc(100vw - 28px) 0 0 0 #555,
+        calc(100vw - 28px) 0 2px rgba(0, 0, 0, 0.6);
+}
+
+.crt-bezel::after {
+    bottom: 10px;
+    left: 10px;
+    /* Second bolt via box-shadow clone positioned at bottom-right */
+    box-shadow:
+        0 0 2px rgba(0, 0, 0, 0.6),
+        calc(100vw - 28px) 0 0 0 #555,
+        calc(100vw - 28px) 0 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ──── Screen ──── */
+.screen {
+    /* Phosphor green tint — not pure black */
+    background: #020a02;
+    border: 2px solid #222;
+    border-radius: 8px;
+    height: calc(100vh - 60px);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* Recessed screen: dark outer frame + green inner glow */
+    outline: 2px solid #111;
+    outline-offset: -4px;
+    box-shadow:
+        inset 0 0 30px rgba(141, 247, 118, 0.06),
+        inset 0 0 8px rgba(141, 247, 118, 0.12),
+        0 0 4px rgba(0, 0, 0, 0.8);
+    /* Text bloom — all text inside gets a faint glow */
+    text-shadow: 0 0 3px rgba(141, 247, 118, 0.4);
+    /* Subtle flicker animation */
+    animation: crt-flicker 0.15s infinite alternate;
+}
+
+/* ──── Scanline overlay — persistent horizontal lines ──── */
+.screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15) 0px,
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+    pointer-events: none;
+    z-index: 12;
+}
+
+/* ──── Vignette + screen curvature shadow ──── */
+.screen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Radial vignette — bright center, dark edges */
+    background: radial-gradient(
+        ellipse at center,
+        transparent 50%,
+        rgba(0, 0, 0, 0.25) 75%,
+        rgba(0, 0, 0, 0.55) 100%
+    );
+    pointer-events: none;
+    z-index: 11;
+    border-radius: 8px;
+}
+
+/* ──── Sweep scan line — single bar that scrolls down ──── */
+.scan-line {
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(
+        rgba(0, 0, 0, 0),
+        rgba(141, 247, 118, 0.04) 50%,
+        rgba(0, 0, 0, 0)
+    );
+    position: absolute;
+    top: -80px;
+    z-index: 13;
+    pointer-events: none;
+    animation: scan 6s infinite linear;
+}
+
+@keyframes scan {
+    0% { top: -80px; }
+    70% { top: 100%; }
+    100% { top: 100%; }
+}
+
+/* ──── Screen reflection — glass highlight ──── */
+.screen-reflection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        /* Main diagonal reflection */
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.03) 0%,
+            transparent 40%,
+            transparent 60%,
+            rgba(255, 255, 255, 0.015) 100%
+        ),
+        /* Corner highlight top-left */
+        radial-gradient(
+            ellipse at 15% 15%,
+            rgba(255, 255, 255, 0.04),
+            transparent 50%
+        );
+    pointer-events: none;
+    z-index: 14;
+    border-radius: 8px;
+}
+
+/* ──── CRT flicker — barely perceptible brightness wobble ──── */
+@keyframes crt-flicker {
+    0%   { opacity: 0.985; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.99; }
+}
+
+/* ──── Phosphor text bloom — green text bleeds light ──── */
+.screen .panel-header {
+    text-shadow:
+        0 0 4px rgba(141, 247, 118, 0.5),
+        0 0 8px rgba(141, 247, 118, 0.2);
+}
+
+.screen .row-label,
+.screen .flow-endpoints,
+.screen .collector-name,
+.screen .config-name {
+    text-shadow: 0 0 3px rgba(141, 247, 118, 0.35);
+}
+
+.screen .status-bar {
+    text-shadow: 0 0 2px rgba(141, 247, 118, 0.3);
+}
+
+/* ──── Bezel label glow on phosphor screen ──── */
+.bezel-label {
+    text-shadow:
+        0 0 6px rgba(216, 201, 158, 0.5),
+        0 0 12px rgba(216, 201, 158, 0.2);
+}

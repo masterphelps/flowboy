@@ -1,0 +1,289 @@
+machines:
+    - name: ump
+      ip: 192.168.50.124
+      mask: 24
+    - name: db-server
+      ip: 192.168.50.123
+      mask: 24
+    - name: uim-hub
+      ip: 192.168.50.122
+      mask: 24
+    - name: toolshed
+      ip: 192.168.50.121
+      mask: 24
+    - name: fs1
+      ip: 192.168.50.120
+      mask: 24
+    - name: dc
+      ip: 192.168.50.100
+      mask: 24
+    - name: vcenter
+      ip: 192.168.50.99
+      mask: 24
+    - name: web01
+      ip: 192.168.50.24
+      mask: 24
+    - name: app01
+      ip: 192.168.50.22
+      mask: 24
+    - name: flowsight-dev
+      ip: 192.168.50.201
+      mask: 24
+    - name: external
+      ip: 172.16.50.2
+      mask: 24
+    - name: public-01
+      ip: 98.137.11.163
+      mask: 24
+    - name: client01
+      ip: 10.0.0.2
+      mask: 24
+    - name: public-02
+      ip: 58.36.48.1
+      mask: 24
+    - name: public-03
+      ip: 12.58.6.125
+      mask: 24
+    - name: Public DNS
+      ip: 4.2.2.2
+      mask: 24
+    - name: Test-Server-5
+      ip: 10.100.100.200
+      mask: 24
+flows:
+    - name: external-to-ump
+      source: external
+      source_port: 42000
+      destination: ump
+      destination_port: 80
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: ump-to-external
+      source: ump
+      source_port: 42000
+      destination: external
+      destination_port: 80
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: ump-to-db
+      source: ump
+      source_port: 41563
+      destination: db-server
+      destination_port: 1433
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: db-to-ump
+      source: db-server
+      source_port: 1433
+      destination: ump
+      destination_port: 41563
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: uim-hub-to-db
+      source: uim-hub
+      source_port: 51245
+      destination: db-server
+      destination_port: 1433
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: db-to-uim-hub
+      source: db-server
+      source_port: 1433
+      destination: uim-hub
+      destination_port: 51245
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: toolshed-to-ump
+      source: toolshed
+      source_port: 43546
+      destination: ump
+      destination_port: 443
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: ump-to-toolshed
+      source: ump
+      source_port: 43546
+      destination: toolshed
+      destination_port: 443
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: ump-to-Public DNS
+      source: ump
+      source_port: 46257
+      destination: Public DNS
+      destination_port: 53
+      protocol: UDP
+      rate: 1Mbps
+      enabled: true
+    - name: Public DNS-to-ump
+      source: Public DNS
+      source_port: 53
+      destination: ump
+      destination_port: 46257
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: vcenter-to-dc-dns
+      source: vcenter
+      source_port: 35874
+      destination: dc
+      destination_port: 53
+      protocol: UDP
+      rate: 1Mbps
+      enabled: true
+    - name: dc-to-vcenter-dns
+      source: dc
+      source_port: 53
+      destination: vcenter
+      destination_port: 35874
+      protocol: UDP
+      rate: 1Mbps
+      enabled: true
+    - name: toolshed-to-fs1
+      source: toolshed
+      source_port: 31598
+      destination: fs1
+      destination_port: 445
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: fs1-to-toolshed
+      source: fs1
+      source_port: 445
+      destination: toolshed
+      destination_port: 31598
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: public-to-web01
+      source: public-01
+      source_port: 0
+      destination: web01
+      destination_port: 0
+      protocol: TCP
+      rate: 100Mbps
+      enabled: true
+    - name: web01-to-public
+      source: web01
+      source_port: 80
+      destination: public-01
+      destination_port: 10000
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: web01-to-app01
+      source: web01
+      source_port: 48214
+      destination: app01
+      destination_port: 8080
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: app01-to-web01
+      source: app01
+      source_port: 48214
+      destination: web01
+      destination_port: 8080
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: client01-to-dns
+      source: client01
+      source_port: 14963
+      destination: Public DNS
+      destination_port: 53
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: public02-to-dns
+      source: public-02
+      source_port: 1289
+      destination: Public DNS
+      destination_port: 53
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: client01-to-flowsight
+      source: client01
+      source_port: 6842
+      destination: flowsight-dev
+      destination_port: 443
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: public02-to-flowsight
+      source: public-02
+      source_port: 2547
+      destination: flowsight-dev
+      destination_port: 443
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: vcenter-to-dc-rdp
+      source: vcenter
+      source_port: 19520
+      destination: dc
+      destination_port: 3389
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: web01-to-app01-385
+      source: web01
+      source_port: 24875
+      destination: app01
+      destination_port: 385
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: ump-to-toolshed-1904
+      source: ump
+      source_port: 25843
+      destination: toolshed
+      destination_port: 1904
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: dc-to-flowsight-461
+      source: dc
+      source_port: 42156
+      destination: flowsight-dev
+      destination_port: 461
+      protocol: TCP
+      rate: 1.5Mbps
+      enabled: true
+    - name: dc-to-flowsight-smb
+      source: dc
+      source_port: 14863
+      destination: flowsight-dev
+      destination_port: 445
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: web01-to-app01-350
+      source: web01
+      source_port: 1212
+      destination: app01
+      destination_port: 350
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+    - name: ump-to-public03
+      source: ump
+      source_port: 1000
+      destination: public-03
+      destination_port: 80
+      protocol: TCP
+      rate: 1Mbps
+      enabled: true
+collectors:
+    - name: flowsight-collector
+      address: 192.168.50.201:9998
+      version: v9

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowboy 3000</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/pipboy.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+    <div class="crt-bezel">
+        <div class="bezel-label">FLOWBOY 3000</div>
+        <div class="screen">
+            <div class="scan-line"></div>
+            <div class="screen-reflection"></div>
+            <!-- Dashboard view (default) -->
+            <div class="dashboard" id="dashboard-view">
+                <!-- Top row: Machines + Flows -->
+                <div class="top-row">
+                    <div class="panel" id="machines-panel">
+                        <div class="panel-header">MACHINES</div>
+                        <div class="panel-content" id="machines-list"></div>
+                        <div class="panel-footer">
+                            <button onclick="showMachineForm()">+ ADD</button>
+                            <button onclick="showMachineImport()">IMPORT</button>
+                        </div>
+                    </div>
+                    <div class="panel" id="flows-panel">
+                        <div class="panel-header">
+                            FLOWS
+                            <span class="sort-controls">
+                                <button class="sort-btn" onclick="setFlowSort('source')">SRC</button>
+                                <button class="sort-btn" onclick="setFlowSort('destination')">DST</button>
+                            </span>
+                        </div>
+                        <div class="panel-content" id="flows-list"></div>
+                        <div class="panel-footer">
+                            <button onclick="showFlowForm()">+ NEW FLOW</button>
+                            <button onclick="startAll()">START ALL</button>
+                            <button onclick="stopAll()">STOP ALL</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resize handle -->
+                <div class="resize-handle" id="resize-handle"></div>
+
+                <!-- Bottom row: Network Map -->
+                <div class="bottom-row" id="bottom-row">
+                    <div class="panel" id="map-panel">
+                        <div class="panel-header">NETWORK MAP</div>
+                        <div class="map-viewport" id="map-viewport">
+                            <canvas id="network-map"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fullscreen view (tabbed) -->
+            <div class="fullscreen-view" id="fullscreen-view" style="display:none">
+                <div class="fs-tabs">
+                    <button class="fs-tab active" data-tab="machines" onclick="setFullscreenTab('machines')">MACHINES</button>
+                    <button class="fs-tab" data-tab="flows" onclick="setFullscreenTab('flows')">FLOWS</button>
+                    <button class="fs-tab" data-tab="map" onclick="setFullscreenTab('map')">MAP</button>
+                </div>
+                <div class="fs-content" id="fs-content"></div>
+                <div class="fs-footer" id="fs-footer"></div>
+            </div>
+
+            <!-- File drawer (slides up from status bar) -->
+            <div class="file-drawer" id="file-drawer">
+                <div class="drawer-header">
+                    <span>FILE — <span id="current-config-name">loading...</span></span>
+                    <button class="drawer-close" onclick="toggleFileDrawer()">&times;</button>
+                </div>
+                <div class="drawer-content" id="config-list"></div>
+                <div class="drawer-footer">
+                    <button onclick="newConfig()">NEW</button>
+                    <button onclick="saveConfig()">SAVE</button>
+                    <input type="text" id="save-as-name" placeholder="config name" style="flex:1; margin:0;">
+                    <button onclick="saveConfigAs()">SAVE AS</button>
+                </div>
+            </div>
+
+            <!-- Collector drawer (slides up from status bar) -->
+            <div class="collector-drawer" id="collector-drawer">
+                <div class="drawer-header">
+                    <span>COLLECTORS</span>
+                    <button class="drawer-close" onclick="toggleCollectorDrawer()">&times;</button>
+                </div>
+                <div class="drawer-content" id="collectors-list"></div>
+                <div class="drawer-footer">
+                    <button onclick="showCollectorForm()">+ ADD</button>
+                </div>
+            </div>
+
+            <!-- Status bar -->
+            <div class="status-bar">
+                <button class="status-btn" id="file-btn" onclick="toggleFileDrawer()">FILE</button>
+                <button class="status-btn" id="collector-btn" onclick="toggleCollectorDrawer()">COLLECTORS <span id="collector-count">0</span></button>
+                <span class="status-spacer"></span>
+                <button class="view-btn active" id="view-dashboard" onclick="setViewMode('dashboard')" title="Dashboard">
+                    <span class="icon-grid"></span>
+                </button>
+                <button class="view-btn" id="view-fullscreen" onclick="setViewMode('fullscreen')" title="Fullscreen">
+                    <span class="icon-expand"></span>
+                </button>
+                <span class="status-spacer"></span>
+                <span id="total-throughput">&#8593;0bps</span>
+                <span id="active-flows">&#9679;0 flows</span>
+                <span id="packets-sec">&#8593;0 pkt/s</span>
+                <span id="engine-status">ENGINE: OFF</span>
+                <canvas id="globe" width="24" height="24"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for forms -->
+    <div class="modal" id="modal" style="display:none">
+        <div class="modal-content" id="modal-body"></div>
+    </div>
+
+    <script src="/js/ws.js"></script>
+    <script src="/js/map.js"></script>
+    <script src="/js/globe.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
