@@ -1,6 +1,6 @@
-# Flowboy 3000
+# Flowboy
 
-A Pip-Boy inspired NetFlow traffic generator.
+A better NetFlow tester.
 
 ## What It Does
 
