@@ -18,6 +18,7 @@ type collectorMode int
 const (
 	collectorNormal   collectorMode = iota
 	collectorAdding                 // inline form for new collector
+	collectorEditing                // inline form for editing selected collector
 	collectorDeleting               // "Are you sure? y/n" prompt
 )
 
@@ -44,6 +45,7 @@ type CollectorPanel struct {
 	addressInput textinput.Model
 	versionInput textinput.Model // "v9" or "ipfix"
 	formFocus    int             // 0=name, 1=address, 2=version
+	editName     string          // original name when editing
 }
 
 // NewCollectorPanel returns an initialised CollectorPanel.
@@ -111,7 +113,7 @@ func (p *CollectorPanel) Update(msg tea.Msg) tea.Cmd {
 		switch p.mode {
 		case collectorNormal:
 			return p.updateNormal(msg)
-		case collectorAdding:
+		case collectorAdding, collectorEditing:
 			return p.updateForm(msg)
 		case collectorDeleting:
 			return p.updateDelete(msg)
@@ -134,12 +136,29 @@ func (p *CollectorPanel) updateNormal(msg tea.KeyMsg) tea.Cmd {
 		}
 	case "n":
 		p.enterAddMode()
+	case "e":
+		if len(p.collectors) > 0 {
+			p.enterEditMode()
+		}
 	case "d":
 		if len(p.collectors) > 0 {
 			p.mode = collectorDeleting
 		}
 	}
 	return nil
+}
+
+func (p *CollectorPanel) enterEditMode() {
+	c := p.collectors[p.cursor]
+	p.mode = collectorEditing
+	p.formFocus = 0
+	p.editName = c.Name
+	p.nameInput.SetValue(c.Name)
+	p.addressInput.SetValue(c.Address)
+	p.versionInput.SetValue(c.Version)
+	p.nameInput.Focus()
+	p.addressInput.Blur()
+	p.versionInput.Blur()
 }
 
 func (p *CollectorPanel) enterAddMode() {
@@ -181,8 +200,17 @@ func (p *CollectorPanel) updateForm(msg tea.KeyMsg) tea.Cmd {
 			Version:   c.Version,
 			Connected: true,
 		}
-		p.collectors = append(p.collectors, cd)
-		p.cursor = len(p.collectors) - 1
+		if p.mode == collectorAdding {
+			p.collectors = append(p.collectors, cd)
+			p.cursor = len(p.collectors) - 1
+		} else {
+			for i := range p.collectors {
+				if p.collectors[i].Name == p.editName {
+					p.collectors[i] = cd
+					break
+				}
+			}
+		}
 		p.mode = collectorNormal
 		return collectorChangedCmd(c)
 	}
@@ -291,7 +319,7 @@ func collectorDeletedCmd(c CollectorDisplay) tea.Cmd {
 
 // View renders the collector panel as a status bar.
 func (p *CollectorPanel) View() string {
-	if p.mode == collectorAdding {
+	if p.mode == collectorAdding || p.mode == collectorEditing {
 		return p.renderForm()
 	}
 	if p.mode == collectorDeleting {
@@ -351,7 +379,11 @@ func (p *CollectorPanel) renderCollectorRow(c CollectorDisplay) string {
 
 func (p *CollectorPanel) renderForm() string {
 	var b strings.Builder
-	b.WriteString(activeItemStyle.Render("NEW COLLECTOR"))
+	label := "NEW COLLECTOR"
+	if p.mode == collectorEditing {
+		label = "EDIT COLLECTOR"
+	}
+	b.WriteString(activeItemStyle.Render(label))
 	b.WriteString("\n\n")
 
 	fields := []struct {
@@ -389,7 +421,7 @@ func (p *CollectorPanel) renderDeleteConfirm() string {
 func (p *CollectorPanel) renderFooter() string {
 	return lipgloss.NewStyle().
 		Foreground(colorAccent).
-		Render("[N]ew  [D]elete")
+		Render("[N]ew  [E]dit  [D]elete")
 }
 
 // -- Helpers --------------------------------------------------------------

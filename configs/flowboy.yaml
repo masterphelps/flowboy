@@ -284,6 +284,6 @@ flows:
       rate: 1Mbps
       enabled: true
 collectors:
-    - name: flowsight-collector
-      address: 192.168.50.201:9998
+    - name: local-dev
+      address: 127.0.0.1:9995
       version: v9

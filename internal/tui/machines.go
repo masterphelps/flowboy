@@ -17,30 +17,36 @@ import (
 type machineMode int
 
 const (
-	machineNormal  machineMode = iota
-	machineAdding              // inline form for new machine
-	machineEditing             // inline form for editing selected machine
-	machineDeleting            // "Are you sure? y/n" prompt
+	machineNormal    machineMode = iota
+	machineAdding                // inline form for new machine
+	machineEditing               // inline form for editing selected machine
+	machineDeleting              // "Are you sure? y/n" prompt
+	machineImporting             // CSV bulk import form
 )
 
 // MachineSelectedMsg is sent when the user moves the cursor to a new machine.
 type MachineSelectedMsg struct {
-	Machine *config.Machine
+	Machine  *config.Machine
+	Selected bool // true if explicitly selected (Enter pressed)
 }
 
 // MachinePanel is a sub-model that renders the machine list and handles
 // CRUD operations via inline forms.
 type MachinePanel struct {
-	machines  []config.Machine
-	cursor    int
-	mode      machineMode
-	nameInput textinput.Model
-	ipInput   textinput.Model
-	maskInput textinput.Model
-	formFocus int // 0=name, 1=ip, 2=mask
-	editName  string // original name when editing
-	width     int
-	height    int
+	machines    []config.Machine
+	cursor      int
+	mode        machineMode
+	nameInput   textinput.Model
+	ipInput     textinput.Model
+	maskInput   textinput.Model
+	formFocus   int    // 0=name, 1=ip, 2=mask
+	editName    string // original name when editing
+	width       int
+	height      int
+	selected    bool   // whether a machine is "selected" for cross-filtering
+	importInput textinput.Model // CSV line input for import
+	importLines []string        // accumulated import lines
+	importMsg   string          // status message after import
 }
 
 // NewMachinePanel returns an initialised MachinePanel.
@@ -60,10 +66,16 @@ func NewMachinePanel() MachinePanel {
 	mi.CharLimit = 2
 	mi.Width = 4
 
+	imp := textinput.New()
+	imp.Placeholder = "name,ip,mask  (e.g. web-server,10.0.1.10,24)"
+	imp.CharLimit = 80
+	imp.Width = 60
+
 	return MachinePanel{
-		nameInput: ni,
-		ipInput:   ii,
-		maskInput: mi,
+		nameInput:   ni,
+		ipInput:     ii,
+		maskInput:   mi,
+		importInput: imp,
 	}
 }
 
@@ -102,6 +114,8 @@ func (p *MachinePanel) Update(msg tea.Msg) tea.Cmd {
 			return p.updateForm(msg)
 		case machineDeleting:
 			return p.updateDelete(msg)
+		case machineImporting:
+			return p.updateImport(msg)
 		}
 	}
 	return nil
@@ -121,6 +135,10 @@ func (p *MachinePanel) updateNormal(msg tea.KeyMsg) tea.Cmd {
 			p.cursor--
 			return p.selectionCmd()
 		}
+	case "enter":
+		// Toggle selection for cross-filtering
+		p.selected = !p.selected
+		return p.selectionCmd()
 	case "n":
 		p.enterAddMode()
 	case "e":
@@ -130,6 +148,80 @@ func (p *MachinePanel) updateNormal(msg tea.KeyMsg) tea.Cmd {
 	case "d":
 		if len(p.machines) > 0 {
 			p.mode = machineDeleting
+		}
+	case "i":
+		p.enterImportMode()
+	}
+	return nil
+}
+
+// MachineImportMsg is emitted when machines are imported from CSV.
+type MachineImportMsg struct {
+	Machines []config.Machine
+}
+
+func (p *MachinePanel) enterImportMode() {
+	p.mode = machineImporting
+	p.importInput.SetValue("")
+	p.importLines = nil
+	p.importMsg = ""
+	p.importInput.Focus()
+}
+
+func (p *MachinePanel) updateImport(msg tea.KeyMsg) tea.Cmd {
+	switch msg.String() {
+	case "esc":
+		p.mode = machineNormal
+		if len(p.importLines) > 0 {
+			// Parse and import accumulated lines
+			return p.doImport()
+		}
+		return nil
+	case "enter":
+		line := strings.TrimSpace(p.importInput.Value())
+		if line != "" {
+			p.importLines = append(p.importLines, line)
+			p.importMsg = fmt.Sprintf("%d lines queued", len(p.importLines))
+		}
+		p.importInput.SetValue("")
+		return nil
+	}
+	m, _ := p.importInput.Update(msg)
+	p.importInput = m
+	return nil
+}
+
+func (p *MachinePanel) doImport() tea.Cmd {
+	var imported []config.Machine
+	for _, line := range p.importLines {
+		parts := strings.Split(line, ",")
+		if len(parts) < 3 {
+			continue
+		}
+		name := strings.TrimSpace(parts[0])
+		ipStr := strings.TrimSpace(parts[1])
+		maskStr := strings.TrimSpace(parts[2])
+		ip := net.ParseIP(ipStr)
+		if ip == nil {
+			continue
+		}
+		maskBits, err := strconv.Atoi(maskStr)
+		if err != nil || maskBits < 0 || maskBits > 32 {
+			continue
+		}
+		m := config.Machine{
+			Name: name,
+			IP:   ip,
+			Mask: net.CIDRMask(maskBits, 32),
+		}
+		p.machines = append(p.machines, m)
+		imported = append(imported, m)
+	}
+	p.importLines = nil
+	p.mode = machineNormal
+	if len(imported) > 0 {
+		return func() tea.Msg {
+			return MachineImportMsg{Machines: imported}
 		}
 	}
 	return nil
@@ -277,8 +369,9 @@ func (p *MachinePanel) updateDelete(msg tea.KeyMsg) tea.Cmd {
 
 func (p *MachinePanel) selectionCmd() tea.Cmd {
 	m := p.SelectedMachine()
+	sel := p.selected
 	return func() tea.Msg {
-		return MachineSelectedMsg{Machine: m}
+		return MachineSelectedMsg{Machine: m, Selected: sel}
 	}
 }
 
@@ -321,6 +414,8 @@ func (p *MachinePanel) View() string {
 
 	if p.mode == machineAdding || p.mode == machineEditing {
 		b.WriteString(p.renderForm())
+	} else if p.mode == machineImporting {
+		b.WriteString(p.renderImportForm())
 	} else if p.mode == machineDeleting {
 		b.WriteString(p.renderDeleteConfirm())
 	} else if len(p.machines) == 0 {
@@ -349,10 +444,12 @@ func (p *MachinePanel) renderList() string {
 		ones, _ := m.Mask.Size()
 		line := fmt.Sprintf("%-18s %s/%d", m.Name, m.IP.String(), ones)
 
-		if i == p.cursor {
+		if i == p.cursor && p.selected {
+			// Selected + cursor: bright with marker
+			b.WriteString(lipgloss.NewStyle().Foreground(colorAccent).Bold(true).Render("● " + line))
+		} else if i == p.cursor {
 			b.WriteString(activeItemStyle.Render("▸ " + line))
 		} else if i%2 == 0 {
-			// Scan line effect: even rows are dimmed.
 			b.WriteString(dimItemStyle.Render("  " + line))
 		} else {
 			b.WriteString("  " + line)
@@ -403,9 +500,29 @@ func (p *MachinePanel) renderDeleteConfirm() string {
 	return b.String()
 }
 
+func (p *MachinePanel) renderImportForm() string {
+	var b strings.Builder
+	b.WriteString(activeItemStyle.Render("IMPORT MACHINES (CSV)"))
+	b.WriteString("\n\n")
+	b.WriteString("  Format: name,ip,mask\n")
+	b.WriteString("  Example: web-server,10.0.1.10,24\n\n")
+	b.WriteString("  ▸ " + p.importInput.View() + "\n")
+	if p.importMsg != "" {
+		b.WriteString("\n  " + p.importMsg + "\n")
+	}
+	if len(p.importLines) > 0 {
+		b.WriteString("\n  Queued:\n")
+		for _, line := range p.importLines {
+			b.WriteString("    " + line + "\n")
+		}
+	}
+	b.WriteString("\n  Enter: add line  Esc: import & close\n")
+	return b.String()
+}
+
 func (p *MachinePanel) renderFooter() string {
 	return lipgloss.NewStyle().
 		Foreground(colorAccent).
-		Render("[N]ew  [E]dit  [D]elete")
+		Render("[N]ew [E]dit [D]elete [I]mport [↵]Select")
 }
 

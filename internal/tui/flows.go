@@ -39,6 +39,7 @@ type FlowDisplay struct {
 	DstPort     uint16
 	Protocol    string
 	Rate        string
+	AppID       uint32
 	BytesSent   uint64
 	PacketsSent uint64
 	Active      bool
@@ -48,22 +49,24 @@ type FlowDisplay struct {
 // FlowPanel is a sub-model that renders the active flows list and handles
 // CRUD operations via inline forms.
 type FlowPanel struct {
-	flows        []FlowDisplay
-	cursor       int
-	mode         flowPanelMode
-	width        int
-	height       int
-	tick         int // animation frame counter
-	nameInput    textinput.Model
-	srcInput     textinput.Model // source machine name
-	srcPortInput textinput.Model
-	dstInput     textinput.Model // dest machine name
-	dstPortInput textinput.Model
-	protoInput   textinput.Model
-	rateInput    textinput.Model
-	appIDInput   textinput.Model
-	formFocus    int
-	editName     string // original name when editing
+	flows         []FlowDisplay
+	cursor        int
+	mode          flowPanelMode
+	width         int
+	height        int
+	tick          int // animation frame counter
+	nameInput     textinput.Model
+	srcInput      textinput.Model // source machine name
+	srcPortInput  textinput.Model
+	dstInput      textinput.Model // dest machine name
+	dstPortInput  textinput.Model
+	protoInput    textinput.Model
+	rateInput     textinput.Model
+	appIDInput    textinput.Model
+	formFocus     int
+	editName      string // original name when editing
+	sortBy        string // "source" or "dest"
+	filterMachine string // filter flows by machine name (empty = show all)
 }
 
 // NewFlowPanel returns an initialised FlowPanel.
@@ -132,6 +135,7 @@ func (p *FlowPanel) SetFlows(flows []config.Flow) {
 			DstPort:  f.DestPort,
 			Protocol: f.Protocol,
 			Rate:     f.Rate,
+			AppID:    f.AppID,
 			Active:   f.Enabled,
 			Enabled:  f.Enabled,
 		}
@@ -211,8 +215,56 @@ func (p *FlowPanel) updateNormal(msg tea.KeyMsg) tea.Cmd {
 			p.flows[p.cursor].Enabled = !p.flows[p.cursor].Enabled
 			return p.flowToggleCmd()
 		}
+	case "o":
+		// Toggle sort between source and dest
+		if p.sortBy == "dest" {
+			p.sortBy = "source"
+		} else {
+			p.sortBy = "dest"
+		}
 	}
 	return nil
+}
+
+// SetFilter sets the machine name filter. Empty string shows all flows.
+func (p *FlowPanel) SetFilter(machineName string) {
+	p.filterMachine = machineName
+}
+
+// visibleFlows returns flows after applying filter and sort.
+func (p *FlowPanel) visibleFlows() []FlowDisplay {
+	var result []FlowDisplay
+	for _, f := range p.flows {
+		if p.filterMachine != "" {
+			if f.Source != p.filterMachine && f.Dest != p.filterMachine {
+				continue
+			}
+		}
+		result = append(result, f)
+	}
+	// Sort
+	if p.sortBy == "dest" {
+		sortFlowsByDest(result)
+	} else {
+		sortFlowsBySrc(result)
+	}
+	return result
+}
+
+func sortFlowsBySrc(flows []FlowDisplay) {
+	for i := 1; i < len(flows); i++ {
+		for j := i; j > 0 && flows[j].Source < flows[j-1].Source; j-- {
+			flows[j], flows[j-1] = flows[j-1], flows[j]
+		}
+	}
+}
+
+func sortFlowsByDest(flows []FlowDisplay) {
+	for i := 1; i < len(flows); i++ {
+		for j := i; j > 0 && flows[j].Dest < flows[j-1].Dest; j-- {
+			flows[j], flows[j-1] = flows[j-1], flows[j]
+		}
+	}
 }
 
 func (p *FlowPanel) enterAddMode() {
@@ -242,7 +294,7 @@ func (p *FlowPanel) enterEditMode() {
 	p.dstPortInput.SetValue(strconv.Itoa(int(f.DstPort)))
 	p.protoInput.SetValue(f.Protocol)
 	p.rateInput.SetValue(f.Rate)
-	p.appIDInput.SetValue("0")
+	p.appIDInput.SetValue(strconv.FormatUint(uint64(f.AppID), 10))
 	p.nameInput.Focus()
 	p.blurAllExcept(0)
 }
@@ -277,6 +329,7 @@ func (p *FlowPanel) updateForm(msg tea.KeyMsg) tea.Cmd {
 			DstPort:  f.DestPort,
 			Protocol: f.Protocol,
 			Rate:     f.Rate,
+			AppID:    f.AppID,
 			Active:   f.Enabled,
 			Enabled:  f.Enabled,
 		}
@@ -552,7 +605,12 @@ func (p *FlowPanel) View() string {
 
 func (p *FlowPanel) renderList() string {
 	var b strings.Builder
-	for i, f := range p.flows {
+	visible := p.visibleFlows()
+	if len(visible) == 0 && p.filterMachine != "" {
+		b.WriteString(fmt.Sprintf("  No flows for %s\n", p.filterMachine))
+		return b.String()
+	}
+	for i, f := range visible {
 		line := p.renderFlowRow(f, i)
 		if i == p.cursor {
 			b.WriteString(activeItemStyle.Render("▸ " + line))
@@ -584,9 +642,14 @@ func (p *FlowPanel) renderFlowRow(f FlowDisplay, _ int) string {
 		status = "\u2718" // cross mark
 	}
 
-	return fmt.Sprintf("%s%s%s  %s  %s %s  %s %s",
+	pktStr := ""
+	if f.PacketsSent > 0 {
+		pktStr = formatCount(f.PacketsSent) + "pkt"
+	}
+
+	return fmt.Sprintf("%s%s%s  %s  %s %s  %s %s %s",
 		srcDst, arrow, dstPart,
-		f.Protocol, bar, f.Rate, wave, status)
+		f.Protocol, bar, f.Rate, wave, status, pktStr)
 }
 
 func (p *FlowPanel) progressBar(f FlowDisplay) string {
@@ -702,9 +765,13 @@ func (p *FlowPanel) renderDeleteConfirm() string {
 }
 
 func (p *FlowPanel) renderFooter() string {
+	sortLabel := "SRC"
+	if p.sortBy == "dest" {
+		sortLabel = "DST"
+	}
 	return lipgloss.NewStyle().
 		Foreground(colorAccent).
-		Render("[N]ew  [E]dit  [D]elete  [S]tart All  [X] Stop All")
+		Render(fmt.Sprintf("[N]ew [E]dit [D]elete [S]tart All [X]Stop All [O]rder:%s", sortLabel))
 }
 
 // truncate shortens a string to maxLen, appending nothing (just clips).
