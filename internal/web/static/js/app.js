@@ -899,11 +899,10 @@ function renderAnomalyScenarios() {
     if (!el || !anomalyScenarios.length) return;
 
     el.innerHTML = anomalyScenarios.map(s => {
-        const cat = scenarioCategory(s.type);
         return `<div class="anomaly-scenario" onclick="showAnomalyTweakForm('${esc(s.type)}')">
-            <div class="scenario-category ${cat}"></div>
+            <div class="scenario-category"></div>
             <div class="scenario-info">
-                <div class="scenario-name ${cat}">${esc(s.name)}</div>
+                <div class="scenario-name">${esc(s.name)}</div>
                 <div class="scenario-desc">${esc(s.description)}</div>
             </div>
             <div class="scenario-defaults">${esc(s.default_duration)}<br>${s.default_intensity}x</div>
@@ -928,7 +927,7 @@ function showAnomalyTweakForm(type) {
     const machineOpts = machines.map(m => `<option value="${esc(m.name)}">${esc(m.name)}</option>`).join('');
 
     showModal(`
-        <div class="modal-title" style="color:${cat === 'attack' ? '#ff4444' : cat === 'volume' ? '#ffaa00' : '#00cccc'}">${esc(s.name)}</div>
+        <div class="modal-title">${esc(s.name)}</div>
         <div style="color:#888; font-size:11px; margin-bottom:12px;">${esc(s.description)}</div>
         <input type="hidden" id="a-type" value="${esc(s.type)}">
         <label>DURATION</label>
@@ -943,7 +942,7 @@ function showAnomalyTweakForm(type) {
         <label>COUNT (synthetic flows/ports)</label>
         <input type="number" id="a-count" value="${s.default_count}" min="0">
         <div class="modal-actions">
-            <button onclick="submitAnomaly()" style="border-color:#ff6600; color:#ff6600;">FIRE</button>
+            <button onclick="submitAnomaly()">FIRE</button>
             <button onclick="hideModal()">CANCEL</button>
         </div>
     `);
@@ -1025,8 +1024,7 @@ function renderAnomalyBanner() {
     if (clearBtn) clearBtn.style.display = '';
 
     const tags = activeAnomalies.map(a => {
-        const cat = scenarioCategory(a.scenario);
-        return `<span class="anomaly-tag ${cat}">${esc(a.name)} (${esc(a.remaining)})
+        return `<span class="anomaly-tag">${esc(a.name)} (${esc(a.remaining)})
             <button onclick="stopAnomaly('${esc(a.id)}')" style="background:none;border:none;color:inherit;cursor:pointer;font-size:12px;padding:0 0 0 4px;">\u2717</button>
         </span>`;
     }).join('');
