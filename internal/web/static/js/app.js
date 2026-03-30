@@ -522,31 +522,52 @@ function handleWSStats(msg) {
     }
 }
 
-// Track cumulative runtime stats from WS
-let runtimeStats = { totalBytes: 0, totalPkts: 0, perFlow: {} };
+// Track runtime stats from WS — compute delta rates, not cumulative totals
+let runtimeStats = { perFlow: {}, prevPerFlow: {}, lastUpdate: Date.now(), totalBps: 0, totalPps: 0 };
 
 function updateRuntimeStats(st) {
-    runtimeStats.perFlow[st.FlowName] = {
-        bytes: st.BytesSent || 0,
-        packets: st.PacketsSent || 0,
+    const now = Date.now();
+    const name = st.FlowName;
+    const curBytes = st.BytesSent || 0;
+    const curPkts = st.PacketsSent || 0;
+
+    // Store previous values for delta calculation
+    const prev = runtimeStats.perFlow[name];
+    runtimeStats.prevPerFlow[name] = prev ? { bytes: prev.bytes, packets: prev.packets, ts: prev.ts } : null;
+
+    runtimeStats.perFlow[name] = {
+        bytes: curBytes,
+        packets: curPkts,
         active: st.Active || false,
+        ts: now,
     };
 
-    // Recalculate totals
-    let totalBytes = 0;
-    let totalPkts = 0;
+    // Calculate aggregate rate from deltas across all flows
+    let totalBps = 0;
+    let totalPps = 0;
     for (const k in runtimeStats.perFlow) {
-        totalBytes += runtimeStats.perFlow[k].bytes;
-        totalPkts += runtimeStats.perFlow[k].packets;
+        const cur = runtimeStats.perFlow[k];
+        const prv = runtimeStats.prevPerFlow[k];
+        if (prv && cur.ts > prv.ts) {
+            const dtSec = (cur.ts - prv.ts) / 1000;
+            if (dtSec > 0 && dtSec < 120) { // ignore stale deltas
+                const bytesDelta = cur.bytes - prv.bytes;
+                const pktsDelta = cur.packets - prv.packets;
+                if (bytesDelta >= 0 && pktsDelta >= 0) {
+                    totalBps += (bytesDelta * 8) / dtSec;
+                    totalPps += pktsDelta / dtSec;
+                }
+            }
+        }
     }
-    runtimeStats.totalBytes = totalBytes;
-    runtimeStats.totalPkts = totalPkts;
 
-    // Update status bar with real data
+    runtimeStats.totalBps = totalBps;
+    runtimeStats.totalPps = totalPps;
+
     const tpEl = document.getElementById('total-throughput');
     const psEl = document.getElementById('packets-sec');
-    if (tpEl) tpEl.textContent = '\u2191' + formatBps(totalBytes);
-    if (psEl) psEl.textContent = '\u2191' + formatCount(totalPkts) + ' pkt/s';
+    if (tpEl) tpEl.textContent = '\u2191' + formatBpsValue(totalBps);
+    if (psEl) psEl.textContent = '\u2191' + formatCount(Math.round(totalPps)) + ' pkt/s';
 }
 
 function updateExporterStats(data) {
