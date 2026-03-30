@@ -170,12 +170,12 @@ body {
     top: -80px;
     z-index: 13;
     pointer-events: none;
-    animation: scan 6s infinite linear;
+    animation: scan 12s infinite linear;
 }
 
 @keyframes scan {
     0% { top: -80px; }
-    70% { top: 100%; }
+    40% { top: 100%; }
     100% { top: 100%; }
 }
 
