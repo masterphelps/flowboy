@@ -752,15 +752,20 @@ func (s *Server) handleAnomalyActive(w http.ResponseWriter, r *http.Request) {
 	}
 	active := s.engine.ActiveAnomalies()
 	type anomalyResp struct {
-		ID        string  `json:"id"`
-		Scenario  string  `json:"scenario"`
-		Name      string  `json:"name"`
-		Duration  string  `json:"duration"`
-		Intensity float64 `json:"intensity"`
-		Remaining string  `json:"remaining"`
+		ID        string   `json:"id"`
+		Scenario  string   `json:"scenario"`
+		Name      string   `json:"name"`
+		Duration  string   `json:"duration"`
+		Intensity float64  `json:"intensity"`
+		Remaining string   `json:"remaining"`
+		Targets   []string `json:"targets"`
 	}
 	resp := make([]anomalyResp, len(active))
 	for i, a := range active {
+		targets := a.Targets
+		if targets == nil {
+			targets = []string{}
+		}
 		resp[i] = anomalyResp{
 			ID:        a.ID,
 			Scenario:  string(a.Scenario.Type),
@@ -768,6 +773,7 @@ func (s *Server) handleAnomalyActive(w http.ResponseWriter, r *http.Request) {
 			Duration:  a.Duration.String(),
 			Intensity: a.Intensity,
 			Remaining: a.Remaining().Truncate(time.Second).String(),
+			Targets:   targets,
 		}
 	}
 	writeJSON(w, http.StatusOK, resp)

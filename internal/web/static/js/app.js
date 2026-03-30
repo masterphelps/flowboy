@@ -54,6 +54,24 @@ async function fetchEngineStatus() {
     updateStatusBar();
 }
 
+// ──── Anomaly-Affected Machines ──────────────────────────────────────────────
+// Returns a Set of machine names involved in active anomalies.
+// If an anomaly has no targets (global), ALL machines are affected.
+function getAnomalyAffectedMachines() {
+    const affected = new Set();
+    if (!activeAnomalies || !activeAnomalies.length) return affected;
+
+    for (const a of activeAnomalies) {
+        if (!a.targets || a.targets.length === 0) {
+            // Global anomaly — all machines affected
+            for (const m of machines) affected.add(m.name);
+        } else {
+            for (const t of a.targets) affected.add(t);
+        }
+    }
+    return affected;
+}
+
 // ──── Machine Panel ──────────────────────────────────────────────────────────
 function renderMachines() {
     const el = document.getElementById('machines-list');
@@ -66,10 +84,12 @@ function renderMachines() {
     }
 
     const sorted = [...machines].sort((a, b) => a.name.localeCompare(b.name));
+    const affected = getAnomalyAffectedMachines();
     el.innerHTML = sorted.map(m => {
         const sel = (selectedMachine === m.name) ? ' selected' : '';
+        const anomaly = affected.has(m.name) ? ' anomaly-attacker' : '';
         const maskStr = m.mask > 0 ? `/${m.mask}` : '';
-        return `<div class="row machine-row${sel}" data-name="${esc(m.name)}" onclick="selectMachine('${esc(m.name)}')">
+        return `<div class="row machine-row${sel}${anomaly}" data-name="${esc(m.name)}" onclick="selectMachine('${esc(m.name)}')">
             <span class="row-label">${esc(m.name)}</span>
             <span class="row-detail">${esc(m.ip)}${maskStr}</span>
             <span class="row-actions">
@@ -122,15 +142,17 @@ function renderFlows() {
         visible = [...visible].sort((a, b) => a[flowSortBy].localeCompare(b[flowSortBy]));
     }
 
+    const affected = getAnomalyAffectedMachines();
     el.innerHTML = visible.map(f => {
         const sel = (selectedFlow === f.name) ? ' selected' : '';
         const active = f.enabled ? ' active' : ' inactive';
+        const anomaly = (affected.has(f.source) || affected.has(f.destination)) ? ' anomaly-affected' : '';
         const wave = f.enabled ? waveString() : '\u2500\u2500\u2500';
         const statusIcon = f.enabled ? '\u25a0' : '\u25b6';
         const toggleAction = f.enabled ? 'stop' : 'start';
         const toggleLabel = f.enabled ? 'STOP' : 'START';
 
-        return `<div class="row flow-row${sel}${active}" data-name="${esc(f.name)}" onclick="selectFlow('${esc(f.name)}')">
+        return `<div class="row flow-row${sel}${active}${anomaly}" data-name="${esc(f.name)}" onclick="selectFlow('${esc(f.name)}')">
             <span class="flow-endpoints">${esc(f.source)}:${f.source_port} \u2192 ${esc(f.destination)}:${f.destination_port}</span>
             <span class="flow-proto">${esc(f.protocol)}</span>
             <span class="flow-bar"><span class="flow-bar-fill" style="width:${flowBarWidth(f)}%"></span></span>
@@ -964,6 +986,8 @@ async function fetchAnomalyScenarios() {
 async function fetchActiveAnomalies() {
     try { activeAnomalies = await api('GET', '/api/anomaly/active') || []; } catch (e) { activeAnomalies = []; }
     renderAnomalyBanner();
+    renderMachines();
+    renderFlows();
 }
 
 function renderAnomalyScenarios() {

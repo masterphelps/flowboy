@@ -1011,8 +1011,25 @@ button:hover {
     50% { opacity: 0.5; }
 }
 
-/* Flow row anomaly highlighting — ONLY place non-standard colors are used */
+/* Anomaly highlighting — ONLY place non-standard colors are used */
+.machine-row.anomaly-attacker {
+    border-left: 2px solid #ff6600;
+    background: rgba(255, 102, 0, 0.08);
+}
+
+.machine-row.anomaly-attacker .row-label {
+    color: #ff6600;
+}
+
+.machine-row.anomaly-attacker .row-detail {
+    color: #cc5500;
+}
+
 .flow-row.anomaly-affected {
     border-left: 2px solid #ff4444;
     background: rgba(255, 68, 68, 0.05);
+}
+
+.flow-row.anomaly-affected .flow-endpoints {
+    color: #ff6600;
 }
