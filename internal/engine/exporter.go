@@ -200,6 +200,10 @@ func decodeRawRecord(data []byte) V9DataRecord {
 	rec.SrcTOS = data[offset]
 	offset++
 
+	// TCP_FLAGS (1)
+	rec.TCPFlags = data[offset]
+	offset++
+
 	// L4_SRC_PORT (2)
 	rec.SrcPort = beUint16(data[offset:])
 	offset += 2

@@ -3,6 +3,7 @@ package web
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"net"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/masterphelps/flowboy/internal/anomaly"
 	"github.com/masterphelps/flowboy/internal/config"
 	"github.com/masterphelps/flowboy/internal/engine"
 )
@@ -709,6 +711,167 @@ func (s *Server) newConfig(w http.ResponseWriter, _ *http.Request) {
 	s.configPath = filepath.Join(filepath.Dir(s.configPath), "untitled.yaml")
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "new", "file": "untitled.yaml"})
+}
+
+// ---------- Anomalies ----------
+
+func (s *Server) handleAnomalyScenarios(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	scenarios := anomaly.AllScenarios()
+	type scenarioResp struct {
+		Type        string  `json:"type"`
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		Duration    string  `json:"default_duration"`
+		Intensity   float64 `json:"default_intensity"`
+		Count       int     `json:"default_count"`
+	}
+	resp := make([]scenarioResp, len(scenarios))
+	for i, sc := range scenarios {
+		resp[i] = scenarioResp{
+			Type:        string(sc.Type),
+			Name:        sc.Name,
+			Description: sc.Description,
+			Duration:    sc.DefaultDuration.String(),
+			Intensity:   sc.DefaultIntensity,
+			Count:       sc.DefaultCount,
+		}
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (s *Server) handleAnomalyActive(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	active := s.engine.ActiveAnomalies()
+	type anomalyResp struct {
+		ID        string  `json:"id"`
+		Scenario  string  `json:"scenario"`
+		Name      string  `json:"name"`
+		Duration  string  `json:"duration"`
+		Intensity float64 `json:"intensity"`
+		Remaining string  `json:"remaining"`
+	}
+	resp := make([]anomalyResp, len(active))
+	for i, a := range active {
+		resp[i] = anomalyResp{
+			ID:        a.ID,
+			Scenario:  string(a.Scenario.Type),
+			Name:      a.Scenario.Name,
+			Duration:  a.Duration.String(),
+			Intensity: a.Intensity,
+			Remaining: a.Remaining().Truncate(time.Second).String(),
+		}
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (s *Server) handleAnomalyStart(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Scenario  string   `json:"scenario"`
+		Duration  string   `json:"duration"`
+		Intensity float64  `json:"intensity"`
+		Targets   []string `json:"targets"`
+		Count     int      `json:"count"`
+	}
+	if err := readJSON(r, &req); err != nil {
+		http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var scenario anomaly.Scenario
+	found := false
+	for _, sc := range anomaly.AllScenarios() {
+		if string(sc.Type) == req.Scenario {
+			scenario = sc
+			found = true
+			break
+		}
+	}
+	if !found {
+		http.Error(w, "unknown scenario: "+req.Scenario, http.StatusBadRequest)
+		return
+	}
+
+	dur := scenario.DefaultDuration
+	if req.Duration != "" {
+		if d, err := time.ParseDuration(req.Duration); err == nil {
+			dur = d
+		}
+	}
+	intensity := scenario.DefaultIntensity
+	if req.Intensity > 0 {
+		intensity = req.Intensity
+	}
+	count := scenario.DefaultCount
+	if req.Count > 0 {
+		count = req.Count
+	}
+
+	id, err := s.engine.StartAnomaly(scenario, dur, intensity, req.Targets, count)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Broadcast to WebSocket clients
+	data, _ := json.Marshal(map[string]any{
+		"type": "anomaly_started",
+		"data": map[string]any{
+			"id": id, "scenario": req.Scenario, "name": scenario.Name,
+			"duration": dur.String(), "targets": req.Targets,
+		},
+	})
+	s.broadcast(data)
+
+	writeJSON(w, http.StatusOK, map[string]string{"id": id, "status": "started"})
+}
+
+func (s *Server) handleAnomalyStop(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID string `json:"id"`
+	}
+	if err := readJSON(r, &req); err != nil {
+		http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := s.engine.StopAnomaly(req.ID); err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	data, _ := json.Marshal(map[string]any{
+		"type": "anomaly_ended",
+		"data": map[string]string{"id": req.ID},
+	})
+	s.broadcast(data)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "stopped"})
+}
+
+func (s *Server) handleAnomalyClear(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	s.engine.ClearAnomalies()
+	data, _ := json.Marshal(map[string]any{
+		"type": "anomaly_cleared",
+		"data": map[string]any{},
+	})
+	s.broadcast(data)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "cleared"})
 }
 
 // ---------- WebSocket ----------

@@ -27,6 +27,7 @@ const (
 	FieldDstMask       = 13
 	FieldLastSwitched  = 21
 	FieldFirstSwitched = 22
+	FieldTCPFlags      = 6
 	FieldApplicationID = 95
 )
 
@@ -42,6 +43,7 @@ var defaultTemplateFields = []templateField{
 	{FieldINPkts, 4},
 	{FieldProtocol, 1},
 	{FieldSrcTOS, 1},
+	{FieldTCPFlags, 1},
 	{FieldL4SrcPort, 2},
 	{FieldIPv4SrcAddr, 4},
 	{FieldSrcMask, 1},
@@ -159,6 +161,7 @@ type V9DataRecord struct {
 	DstPort   uint16
 	Protocol  uint8
 	SrcTOS    uint8
+	TCPFlags  uint8
 	SrcMask   uint8
 	DstMask   uint8
 	Octets    uint32
@@ -188,6 +191,10 @@ func (r *V9DataRecord) Encode() []byte {
 
 	// SRC_TOS (1)
 	buf[offset] = r.SrcTOS
+	offset++
+
+	// TCP_FLAGS (1)
+	buf[offset] = r.TCPFlags
 	offset++
 
 	// L4_SRC_PORT (2)

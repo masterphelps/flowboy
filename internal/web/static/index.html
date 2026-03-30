@@ -95,10 +95,26 @@
                 </div>
             </div>
 
+            <!-- Anomaly drawer -->
+            <div class="anomaly-drawer" id="anomaly-drawer">
+                <div class="drawer-header">
+                    <span>INTRODUCE ANOMALY</span>
+                    <button class="drawer-close" onclick="toggleAnomalyDrawer()">&times;</button>
+                </div>
+                <div class="drawer-content" id="anomaly-scenarios"></div>
+                <div class="drawer-footer">
+                    <button onclick="clearAllAnomalies()" id="clear-anomalies-btn" style="display:none">CLEAR ALL</button>
+                </div>
+            </div>
+
+            <!-- Active anomaly banner -->
+            <div class="anomaly-banner" id="anomaly-banner" style="display:none"></div>
+
             <!-- Status bar -->
             <div class="status-bar">
                 <button class="status-btn" id="file-btn" onclick="toggleFileDrawer()">FILE</button>
                 <button class="status-btn" id="collector-btn" onclick="toggleCollectorDrawer()">COLLECTORS <span id="collector-count">0</span></button>
+                <button class="status-btn" id="anomaly-btn" onclick="toggleAnomalyDrawer()">ANOMALY</button>
                 <span class="status-spacer"></span>
                 <button class="view-btn active" id="view-dashboard" onclick="setViewMode('dashboard')" title="Dashboard">
                     <span class="icon-grid"></span>

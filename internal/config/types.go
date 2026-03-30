@@ -35,6 +35,8 @@ type Flow struct {
 	ActiveTimeout   time.Duration `yaml:"active_timeout"`
 	InactiveTimeout time.Duration `yaml:"inactive_timeout"`
 	Enabled         bool          `yaml:"enabled"`
+	ConnectionStyle string        `yaml:"connection_style,omitempty"` // "persistent" or "transactional"
+	Fluctuation     *Fluctuation  `yaml:"fluctuation,omitempty"`
 }
 
 // NewFlow returns a Flow with sensible defaults.
@@ -44,6 +46,7 @@ func NewFlow() Flow {
 		ActiveTimeout:   60 * time.Second,
 		InactiveTimeout: 15 * time.Second,
 		Enabled:         true,
+		ConnectionStyle: "persistent",
 	}
 }
 
@@ -52,6 +55,22 @@ type Collector struct {
 	Name    string `yaml:"name"`
 	Address string `yaml:"address"`
 	Version string `yaml:"version"` // "v9" or "ipfix"
+}
+
+// Fluctuation controls sine-wave rate variation.
+type Fluctuation struct {
+	Amplitude float64       `yaml:"amplitude"`      // 0.0-1.0, default 0.3
+	Period    time.Duration `yaml:"period"`          // default 1h
+	Phase     time.Duration `yaml:"phase,omitempty"` // offset, default 0
+}
+
+// DefaultFluctuation returns fluctuation with sensible defaults.
+func DefaultFluctuation() Fluctuation {
+	return Fluctuation{
+		Amplitude: 0.3,
+		Period:    time.Hour,
+		Phase:     0,
+	}
 }
 
 // Rate represents a parsed traffic rate.

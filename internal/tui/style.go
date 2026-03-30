@@ -15,7 +15,11 @@ var (
 	colorPanel    = lipgloss.Color("#272b2a")
 	colorAccent   = lipgloss.Color("#d8c99e")
 	colorBorder   = lipgloss.Color("#333333")
-	colorBright   = lipgloss.Color("#7ff12a")
+	colorBright         = lipgloss.Color("#7ff12a")
+	colorAnomalyAttack  = lipgloss.Color("#ff4444")
+	colorAnomalyVolume  = lipgloss.Color("#ffaa00")
+	colorAnomalyPattern = lipgloss.Color("#00cccc")
+	colorAnomalyBanner  = lipgloss.Color("#ff6600")
 
 	// Panel styles
 	panelStyle = lipgloss.NewStyle().

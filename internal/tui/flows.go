@@ -42,8 +42,9 @@ type FlowDisplay struct {
 	AppID       uint32
 	BytesSent   uint64
 	PacketsSent uint64
-	Active      bool
-	Enabled     bool
+	Active          bool
+	Enabled         bool
+	ConnectionStyle string
 }
 
 // FlowPanel is a sub-model that renders the active flows list and handles
@@ -128,16 +129,17 @@ func (p *FlowPanel) SetFlows(flows []config.Flow) {
 	p.flows = make([]FlowDisplay, len(flows))
 	for i, f := range flows {
 		p.flows[i] = FlowDisplay{
-			Name:     f.Name,
-			Source:   f.SourceName,
-			SrcPort:  f.SourcePort,
-			Dest:     f.DestName,
-			DstPort:  f.DestPort,
-			Protocol: f.Protocol,
-			Rate:     f.Rate,
-			AppID:    f.AppID,
-			Active:   f.Enabled,
-			Enabled:  f.Enabled,
+			Name:            f.Name,
+			Source:          f.SourceName,
+			SrcPort:         f.SourcePort,
+			Dest:            f.DestName,
+			DstPort:         f.DestPort,
+			Protocol:        f.Protocol,
+			Rate:            f.Rate,
+			AppID:           f.AppID,
+			Active:          f.Enabled,
+			Enabled:         f.Enabled,
+			ConnectionStyle: f.ConnectionStyle,
 		}
 	}
 	if p.cursor >= len(p.flows) {
@@ -612,10 +614,11 @@ func (p *FlowPanel) renderList() string {
 	}
 	for i, f := range visible {
 		line := p.renderFlowRow(f, i)
-		if i == p.cursor {
+		if strings.HasPrefix(f.Name, "[A]") {
+			b.WriteString(lipgloss.NewStyle().Foreground(colorAnomalyAttack).Render("! " + line))
+		} else if i == p.cursor {
 			b.WriteString(activeItemStyle.Render("▸ " + line))
 		} else if i%2 == 0 {
-			// Scan line effect: even rows are dimmed.
 			b.WriteString(dimItemStyle.Render("  " + line))
 		} else {
 			b.WriteString("  " + line)

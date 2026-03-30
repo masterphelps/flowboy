@@ -11,6 +11,8 @@ let selectedFlow = null;    // name of currently selected flow
 let flowSortBy = 'source';  // 'source' or 'destination' — default to source
 let waveFrame = 0;          // animation tick counter
 let currentConfigName = '';  // currently loaded config filename
+let anomalyScenarios = [];   // available anomaly scenarios
+let activeAnomalies = [];    // currently active anomalies
 let viewMode = 'dashboard';  // 'dashboard' or 'fullscreen'
 let fullscreenTab = 'machines'; // 'machines', 'flows', or 'map'
 
@@ -507,10 +509,16 @@ function handleWSStats(msg) {
             updateRuntimeStats(st);
         }
     } else if (msg.type === 'exporter_stats') {
-        // msg.data is a map of collector name → stats
         if (msg.data) {
             updateExporterStats(msg.data);
         }
+    } else if (msg.type === 'anomaly_started') {
+        fetchActiveAnomalies();
+    } else if (msg.type === 'anomaly_ended') {
+        fetchActiveAnomalies();
+    } else if (msg.type === 'anomaly_cleared') {
+        activeAnomalies = [];
+        renderAnomalyBanner();
     }
 }
 
@@ -875,6 +883,190 @@ async function submitEditCollector() {
     await fetchCollectors();
 }
 
+// ──── Anomaly System ────────────────────────────────────────────────────────
+async function fetchAnomalyScenarios() {
+    try { anomalyScenarios = await api('GET', '/api/anomaly/scenarios') || []; } catch (e) { anomalyScenarios = []; }
+    renderAnomalyScenarios();
+}
+
+async function fetchActiveAnomalies() {
+    try { activeAnomalies = await api('GET', '/api/anomaly/active') || []; } catch (e) { activeAnomalies = []; }
+    renderAnomalyBanner();
+}
+
+function renderAnomalyScenarios() {
+    const el = document.getElementById('anomaly-scenarios');
+    if (!el || !anomalyScenarios.length) return;
+
+    el.innerHTML = anomalyScenarios.map(s => {
+        const cat = scenarioCategory(s.type);
+        return `<div class="anomaly-scenario" onclick="showAnomalyTweakForm('${esc(s.type)}')">
+            <div class="scenario-category ${cat}"></div>
+            <div class="scenario-info">
+                <div class="scenario-name ${cat}">${esc(s.name)}</div>
+                <div class="scenario-desc">${esc(s.description)}</div>
+            </div>
+            <div class="scenario-defaults">${esc(s.default_duration)}<br>${s.default_intensity}x</div>
+            <button class="scenario-fire" onclick="event.stopPropagation(); fireAnomaly('${esc(s.type)}')">FIRE</button>
+        </div>`;
+    }).join('');
+}
+
+function scenarioCategory(type) {
+    const attack = ['ddos', 'port_scan', 'lateral_movement'];
+    const volume = ['data_exfiltration', 'bandwidth_spike', 'traffic_blackout'];
+    if (attack.includes(type)) return 'attack';
+    if (volume.includes(type)) return 'volume';
+    return 'pattern';
+}
+
+function showAnomalyTweakForm(type) {
+    const s = anomalyScenarios.find(sc => sc.type === type);
+    if (!s) return;
+    const cat = scenarioCategory(type);
+
+    const machineOpts = machines.map(m => `<option value="${esc(m.name)}">${esc(m.name)}</option>`).join('');
+
+    showModal(`
+        <div class="modal-title" style="color:${cat === 'attack' ? '#ff4444' : cat === 'volume' ? '#ffaa00' : '#00cccc'}">${esc(s.name)}</div>
+        <div style="color:#888; font-size:11px; margin-bottom:12px;">${esc(s.description)}</div>
+        <input type="hidden" id="a-type" value="${esc(s.type)}">
+        <label>DURATION</label>
+        <input type="text" id="a-duration" value="${esc(s.default_duration)}">
+        <label>INTENSITY (multiplier)</label>
+        <input type="text" id="a-intensity" value="${s.default_intensity}">
+        <label>TARGETS (optional — select machines)</label>
+        <select id="a-targets" multiple size="4" style="width:100%; background:#000; border:1px solid #333; color:#8df776; font-family:'Share Tech Mono',monospace; font-size:11px;">
+            <option value="">ALL MACHINES</option>
+            ${machineOpts}
+        </select>
+        <label>COUNT (synthetic flows/ports)</label>
+        <input type="number" id="a-count" value="${s.default_count}" min="0">
+        <div class="modal-actions">
+            <button onclick="submitAnomaly()" style="border-color:#ff6600; color:#ff6600;">FIRE</button>
+            <button onclick="hideModal()">CANCEL</button>
+        </div>
+    `);
+}
+
+async function submitAnomaly() {
+    const type = document.getElementById('a-type').value;
+    const duration = document.getElementById('a-duration').value.trim();
+    const intensity = parseFloat(document.getElementById('a-intensity').value) || 0;
+    const countVal = parseInt(document.getElementById('a-count').value, 10) || 0;
+
+    const targetsEl = document.getElementById('a-targets');
+    const targets = [];
+    if (targetsEl) {
+        for (const opt of targetsEl.selectedOptions) {
+            if (opt.value) targets.push(opt.value);
+        }
+    }
+
+    try {
+        await api('POST', '/api/anomaly/start', {
+            scenario: type, duration, intensity, targets, count: countVal
+        });
+        hideModal();
+        await fetchActiveAnomalies();
+    } catch (e) {
+        alert('Failed to start anomaly: ' + e.message);
+    }
+}
+
+async function fireAnomaly(type) {
+    const s = anomalyScenarios.find(sc => sc.type === type);
+    if (!s) return;
+    try {
+        await api('POST', '/api/anomaly/start', {
+            scenario: type,
+            duration: s.default_duration,
+            intensity: s.default_intensity,
+            count: s.default_count,
+            targets: []
+        });
+        await fetchActiveAnomalies();
+    } catch (e) {
+        alert('Failed: ' + e.message);
+    }
+}
+
+async function clearAllAnomalies() {
+    try {
+        await api('POST', '/api/anomaly/clear');
+        activeAnomalies = [];
+        renderAnomalyBanner();
+    } catch (e) { /* ignore */ }
+}
+
+async function stopAnomaly(id) {
+    try {
+        await api('POST', '/api/anomaly/stop', { id });
+        await fetchActiveAnomalies();
+    } catch (e) { /* ignore */ }
+}
+
+function renderAnomalyBanner() {
+    const banner = document.getElementById('anomaly-banner');
+    const btn = document.getElementById('anomaly-btn');
+    const clearBtn = document.getElementById('clear-anomalies-btn');
+
+    if (!banner) return;
+
+    if (!activeAnomalies || activeAnomalies.length === 0) {
+        banner.style.display = 'none';
+        if (btn) btn.classList.remove('has-active');
+        if (clearBtn) clearBtn.style.display = 'none';
+        return;
+    }
+
+    banner.style.display = 'flex';
+    if (btn) btn.classList.add('has-active');
+    if (clearBtn) clearBtn.style.display = '';
+
+    const tags = activeAnomalies.map(a => {
+        const cat = scenarioCategory(a.scenario);
+        return `<span class="anomaly-tag ${cat}">${esc(a.name)} (${esc(a.remaining)})
+            <button onclick="stopAnomaly('${esc(a.id)}')" style="background:none;border:none;color:inherit;cursor:pointer;font-size:12px;padding:0 0 0 4px;">\u2717</button>
+        </span>`;
+    }).join('');
+
+    banner.innerHTML = `<span>ANOMALY:</span> ${tags}
+        <button class="clear-all-btn" onclick="clearAllAnomalies()">CLEAR ALL</button>`;
+}
+
+function toggleAnomalyDrawer() {
+    const drawer = document.getElementById('anomaly-drawer');
+    const btn = document.getElementById('anomaly-btn');
+    if (!drawer) return;
+    // Close other drawers
+    const fileDrawer = document.getElementById('file-drawer');
+    if (fileDrawer && fileDrawer.classList.contains('open')) {
+        fileDrawer.classList.remove('open');
+        document.getElementById('file-btn')?.classList.remove('active');
+    }
+    const collDrawer = document.getElementById('collector-drawer');
+    if (collDrawer && collDrawer.classList.contains('open')) {
+        collDrawer.classList.remove('open');
+        document.getElementById('collector-btn')?.classList.remove('active');
+    }
+    drawer.classList.toggle('open');
+    if (btn) btn.classList.toggle('active', drawer.classList.contains('open'));
+    if (drawer.classList.contains('open')) {
+        fetchAnomalyScenarios();
+        fetchActiveAnomalies();
+    }
+}
+
+// Poll active anomalies to update countdown timers
+let anomalyPollInterval = null;
+function startAnomalyPolling() {
+    if (anomalyPollInterval) clearInterval(anomalyPollInterval);
+    anomalyPollInterval = setInterval(() => {
+        if (activeAnomalies.length > 0) fetchActiveAnomalies();
+    }, 2000);
+}
+
 // ──── Utility Functions ──────────────────────────────────────────────────────
 function esc(s) {
     if (!s) return '';
@@ -947,6 +1139,8 @@ async function init() {
         fetchCollectors(),
         fetchEngineStatus(),
         fetchConfigs(),
+        fetchAnomalyScenarios(),
+        fetchActiveAnomalies(),
     ]);
 
     // Highlight default sort button
@@ -956,6 +1150,9 @@ async function init() {
 
     // Start waveform animation
     startWaveAnimation();
+
+    // Start anomaly polling for countdown updates
+    startAnomalyPolling();
 
     // Periodic engine status refresh
     setInterval(fetchEngineStatus, 5000);

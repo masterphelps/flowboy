@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/masterphelps/flowboy/internal/anomaly"
 	"github.com/masterphelps/flowboy/internal/config"
 )
 
@@ -25,26 +26,30 @@ type Engine struct {
 	flows    map[string]*flowRunner
 	records  chan []byte    // encoded NetFlow v9 data records
 	stats    chan FlowStats // real-time stats for UI
-	running  bool
-	stopCh   chan struct{}
+	running           bool
+	stopCh            chan struct{}
+	globalFluctuation *config.Fluctuation
+	anomalyMgr        *anomaly.Manager
 }
 
 // flowRunner manages a single flow's goroutine.
 type flowRunner struct {
-	flow   config.Flow
-	src    config.Machine
-	dst    config.Machine
-	rate   config.Rate
-	stopCh chan struct{}
+	flow      config.Flow
+	src       config.Machine
+	dst       config.Machine
+	rate      config.Rate
+	stopCh    chan struct{}
+	connState *connState
 }
 
 // New creates a new Engine instance.
 func New() *Engine {
 	return &Engine{
-		machines: make(map[string]config.Machine),
-		flows:    make(map[string]*flowRunner),
-		records:  make(chan []byte, 256),
-		stats:    make(chan FlowStats, 256),
+		machines:   make(map[string]config.Machine),
+		flows:      make(map[string]*flowRunner),
+		records:    make(chan []byte, 4096),
+		stats:      make(chan FlowStats, 256),
+		anomalyMgr: anomaly.NewManager(),
 	}
 }
 
@@ -62,7 +67,7 @@ func (e *Engine) Start() {
 	// Start goroutines for any flows already added while engine was stopped.
 	for _, fr := range e.flows {
 		if fr.flow.Enabled {
-			go fr.run(e.records, e.stats, e.stopCh)
+			go fr.run(e.records, e.stats, e.stopCh, e.globalFluctuation, e.anomalyMgr)
 		}
 	}
 }
@@ -143,17 +148,18 @@ func (e *Engine) AddFlow(f config.Flow) error {
 	}
 
 	fr := &flowRunner{
-		flow:   f,
-		src:    src,
-		dst:    dst,
-		rate:   rate,
-		stopCh: make(chan struct{}),
+		flow:      f,
+		src:       src,
+		dst:       dst,
+		rate:      rate,
+		stopCh:    make(chan struct{}),
+		connState: newConnState(f.ConnectionStyle),
 	}
 
 	e.flows[f.Name] = fr
 
 	if e.running && f.Enabled {
-		go fr.run(e.records, e.stats, e.stopCh)
+		go fr.run(e.records, e.stats, e.stopCh, e.globalFluctuation, e.anomalyMgr)
 	}
 
 	return nil
@@ -196,6 +202,38 @@ func (e *Engine) Records() <-chan []byte {
 	return e.records
 }
 
+// StartAnomaly activates an anomaly scenario.
+func (e *Engine) StartAnomaly(scenario anomaly.Scenario, duration time.Duration, intensity float64, targets []string, count int) (string, error) {
+	return e.anomalyMgr.Start(scenario, duration, intensity, targets, count)
+}
+
+// StopAnomaly stops a specific anomaly by ID.
+func (e *Engine) StopAnomaly(id string) error {
+	return e.anomalyMgr.Stop(id)
+}
+
+// ClearAnomalies stops all active anomalies.
+func (e *Engine) ClearAnomalies() {
+	e.anomalyMgr.ClearAll()
+}
+
+// ActiveAnomalies returns all currently active anomalies.
+func (e *Engine) ActiveAnomalies() []anomaly.ActiveAnomaly {
+	return e.anomalyMgr.Active()
+}
+
+// AnomalyManager returns the anomaly manager for direct access.
+func (e *Engine) AnomalyManager() *anomaly.Manager {
+	return e.anomalyMgr
+}
+
+// SetGlobalFluctuation sets the global fluctuation defaults.
+func (e *Engine) SetGlobalFluctuation(f *config.Fluctuation) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.globalFluctuation = f
+}
+
 // Stats returns a read-only channel of flow statistics.
 func (e *Engine) Stats() <-chan FlowStats {
 	return e.stats
@@ -203,7 +241,7 @@ func (e *Engine) Stats() <-chan FlowStats {
 
 // run is the main loop for a single flow's goroutine. It generates NetFlow v9
 // data records at the flow's ActiveTimeout interval.
-func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineStop <-chan struct{}) {
+func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineStop <-chan struct{}, globalFluct *config.Fluctuation, anomalyMgr *anomaly.Manager) {
 	timeout := fr.flow.ActiveTimeout
 	if timeout <= 0 {
 		timeout = 60 * time.Second
@@ -222,7 +260,8 @@ func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineS
 		case <-engineStop:
 			return
 		case <-ticker.C:
-			octets := fr.rate.BytesPerInterval(timeout)
+			now := time.Now()
+			octets := fluctuateRate(fr.rate, timeout, now, fr.flow.Fluctuation, globalFluct)
 			packets := octets / 1500
 			if packets == 0 {
 				packets = 1
@@ -230,6 +269,17 @@ func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineS
 
 			totalBytes += octets
 			totalPackets += packets
+
+			tcpFlags := fr.connState.nextFlags()
+
+			// Apply anomaly modifiers
+			if anomalyMgr != nil {
+				mod := anomalyMgr.GetModifiers(fr.flow.Name, fr.flow.SourceName)
+				octets = uint64(float64(octets) * mod.RateMultiplier)
+				if mod.FlagOverride != nil {
+					tcpFlags = *mod.FlagOverride
+				}
+			}
 
 			rec := V9DataRecord{
 				SrcAddr:   ipTo4(fr.src.IP),
@@ -241,8 +291,9 @@ func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineS
 				DstMask:   maskPrefixLen(fr.dst.Mask),
 				Octets:    uint32(octets),
 				Packets:   uint32(packets),
-				FirstSeen: uint32(time.Now().Add(-timeout).UnixMilli() & 0xFFFFFFFF),
-				LastSeen:  uint32(time.Now().UnixMilli() & 0xFFFFFFFF),
+				TCPFlags:  tcpFlags,
+				FirstSeen: uint32(now.Add(-timeout).UnixMilli() & 0xFFFFFFFF),
+				LastSeen:  uint32(now.UnixMilli() & 0xFFFFFFFF),
 				AppID:     fr.flow.AppID,
 			}
 

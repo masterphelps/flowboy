@@ -49,10 +49,10 @@ func TestIPFIXTemplateEncoding(t *testing.T) {
 		t.Errorf("template ID: got %d, want 256", tmplID)
 	}
 
-	// Field count = 13 (at offset 22-24).
+	// Field count = 14 (at offset 22-24, includes TCP_FLAGS).
 	fieldCount := binary.BigEndian.Uint16(data[22:24])
-	if fieldCount != 13 {
-		t.Errorf("field count: got %d, want 13", fieldCount)
+	if fieldCount != 14 {
+		t.Errorf("field count: got %d, want 14", fieldCount)
 	}
 }
 
@@ -74,12 +74,12 @@ func TestIPFIXDataRecordEncoding(t *testing.T) {
 	}
 	data := rec.Encode()
 
-	// Total record size should be 36 bytes (same as v9).
-	if len(data) != 36 {
-		t.Fatalf("record size: got %d, want 36", len(data))
+	// Total record size should be 37 bytes (was 36, +1 for TCP_FLAGS).
+	if len(data) != 37 {
+		t.Fatalf("record size: got %d, want 37", len(data))
 	}
 
-	// Verify exact field values at known offsets (same layout as v9).
+	// Verify exact field values at known offsets.
 	// octetDeltaCount at offset 0
 	if got := binary.BigEndian.Uint32(data[0:4]); got != 1000 {
 		t.Errorf("octetDeltaCount: got %d, want 1000", got)
@@ -96,40 +96,44 @@ func TestIPFIXDataRecordEncoding(t *testing.T) {
 	if data[9] != 0 {
 		t.Errorf("ipClassOfService: got %d, want 0", data[9])
 	}
-	// sourceTransportPort at offset 10
-	if got := binary.BigEndian.Uint16(data[10:12]); got != 80 {
+	// tcpControlBits at offset 10
+	if data[10] != 0 {
+		t.Errorf("tcpControlBits: got %d, want 0", data[10])
+	}
+	// sourceTransportPort at offset 11
+	if got := binary.BigEndian.Uint16(data[11:13]); got != 80 {
 		t.Errorf("sourceTransportPort: got %d, want 80", got)
 	}
-	// sourceIPv4Address at offset 12
-	if data[12] != 10 || data[13] != 0 || data[14] != 0 || data[15] != 1 {
-		t.Errorf("sourceIPv4Address: got %v, want [10 0 0 1]", data[12:16])
+	// sourceIPv4Address at offset 13
+	if data[13] != 10 || data[14] != 0 || data[15] != 0 || data[16] != 1 {
+		t.Errorf("sourceIPv4Address: got %v, want [10 0 0 1]", data[13:17])
 	}
-	// sourceIPv4PrefixLength at offset 16
-	if data[16] != 24 {
-		t.Errorf("sourceIPv4PrefixLength: got %d, want 24", data[16])
+	// sourceIPv4PrefixLength at offset 17
+	if data[17] != 24 {
+		t.Errorf("sourceIPv4PrefixLength: got %d, want 24", data[17])
 	}
-	// destinationTransportPort at offset 17
-	if got := binary.BigEndian.Uint16(data[17:19]); got != 12345 {
+	// destinationTransportPort at offset 18
+	if got := binary.BigEndian.Uint16(data[18:20]); got != 12345 {
 		t.Errorf("destinationTransportPort: got %d, want 12345", got)
 	}
-	// destinationIPv4Address at offset 19
-	if data[19] != 10 || data[20] != 0 || data[21] != 0 || data[22] != 2 {
-		t.Errorf("destinationIPv4Address: got %v, want [10 0 0 2]", data[19:23])
+	// destinationIPv4Address at offset 20
+	if data[20] != 10 || data[21] != 0 || data[22] != 0 || data[23] != 2 {
+		t.Errorf("destinationIPv4Address: got %v, want [10 0 0 2]", data[20:24])
 	}
-	// destinationIPv4PrefixLength at offset 23
-	if data[23] != 16 {
-		t.Errorf("destinationIPv4PrefixLength: got %d, want 16", data[23])
+	// destinationIPv4PrefixLength at offset 24
+	if data[24] != 16 {
+		t.Errorf("destinationIPv4PrefixLength: got %d, want 16", data[24])
 	}
-	// flowEndSysUpTime at offset 24
-	if got := binary.BigEndian.Uint32(data[24:28]); got != 200 {
+	// flowEndSysUpTime at offset 25
+	if got := binary.BigEndian.Uint32(data[25:29]); got != 200 {
 		t.Errorf("flowEndSysUpTime: got %d, want 200", got)
 	}
-	// flowStartSysUpTime at offset 28
-	if got := binary.BigEndian.Uint32(data[28:32]); got != 100 {
+	// flowStartSysUpTime at offset 29
+	if got := binary.BigEndian.Uint32(data[29:33]); got != 100 {
 		t.Errorf("flowStartSysUpTime: got %d, want 100", got)
 	}
-	// applicationId at offset 32
-	if got := binary.BigEndian.Uint32(data[32:36]); got != 99 {
+	// applicationId at offset 33
+	if got := binary.BigEndian.Uint32(data[33:37]); got != 99 {
 		t.Errorf("applicationId: got %d, want 99", got)
 	}
 }
@@ -147,8 +151,8 @@ func TestIPFIXAppIDIncluded(t *testing.T) {
 	}
 	data := rec.Encode()
 
-	// applicationId (IANA IE 95) is at offset 32 when non-zero.
-	appID := binary.BigEndian.Uint32(data[32:36])
+	// applicationId (IANA IE 95) is at offset 33 (shifted +1 by TCP_FLAGS).
+	appID := binary.BigEndian.Uint32(data[33:37])
 	if appID != 42 {
 		t.Errorf("applicationId: got %d, want 42", appID)
 	}

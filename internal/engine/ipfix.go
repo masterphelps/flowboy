@@ -27,6 +27,7 @@ var ipfixDefaultElements = []ipfixInformationElement{
 	{FieldINPkts, 4},        // packetDeltaCount (2)
 	{FieldProtocol, 1},      // protocolIdentifier (4)
 	{FieldSrcTOS, 1},        // ipClassOfService (5)
+	{FieldTCPFlags, 1},      // tcpControlBits (6)
 	{FieldL4SrcPort, 2},     // sourceTransportPort (7)
 	{FieldIPv4SrcAddr, 4},   // sourceIPv4Address (8)
 	{FieldSrcMask, 1},       // sourceIPv4PrefixLength (9)
@@ -151,6 +152,7 @@ type IPFIXDataRecord struct {
 	DstPort   uint16
 	Protocol  uint8
 	SrcTOS    uint8
+	TCPFlags  uint8
 	SrcMask   uint8
 	DstMask   uint8
 	Octets    uint32
@@ -180,6 +182,10 @@ func (r *IPFIXDataRecord) Encode() []byte {
 
 	// ipClassOfService (1)
 	buf[offset] = r.SrcTOS
+	offset++
+
+	// tcpControlBits (1)
+	buf[offset] = r.TCPFlags
 	offset++
 
 	// sourceTransportPort (2)

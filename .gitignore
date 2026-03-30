@@ -9,3 +9,6 @@ flowboy
 .vscode/
 *.swp
 *.swo
+
+# Brainstorming sessions
+.superpowers/

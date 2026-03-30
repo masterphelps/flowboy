@@ -4,6 +4,7 @@ package tui
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,6 +27,7 @@ const (
 	viewDashboard viewMode = iota // machines | flows + collectors bar
 	viewMap                       // fullscreen network map
 	viewConfig                    // config file management
+	viewAnomaly                   // anomaly scenario picker
 )
 
 // exporterStatsMsg wraps periodic exporter stats for collector panel updates.
@@ -43,6 +45,7 @@ type Model struct {
 	collectorPanel CollectorPanel
 	mapPanel       MapPanel
 	configPanel    ConfigPanel
+	anomalyPanel   AnomalyPanel
 	width          int
 	height         int
 	focus          focusPanel
@@ -61,6 +64,7 @@ func NewModel(eng *engine.Engine, exp *engine.Exporter, cfg *config.Config, conf
 	cp := NewCollectorPanel()
 	np := NewMapPanel()
 	cfp := NewConfigPanel(configPath)
+	ap := NewAnomalyPanel()
 
 	// Seed the panels with whatever the engine already knows about.
 	if eng != nil {
@@ -81,6 +85,7 @@ func NewModel(eng *engine.Engine, exp *engine.Exporter, cfg *config.Config, conf
 		collectorPanel: cp,
 		mapPanel:       np,
 		configPanel:    cfp,
+		anomalyPanel:   ap,
 		focus:          focusMachines,
 		view:           viewDashboard,
 	}
@@ -134,12 +139,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.view = viewDashboard
 				return m, nil
 			case "q":
-				// Don't quit from config view, go back to dashboard
 				m.view = viewDashboard
 				return m, nil
 			}
-			// Forward to config panel
 			cmd := m.configPanel.Update(msg)
+			return m, cmd
+		}
+		if m.view == viewAnomaly {
+			switch msg.String() {
+			case "esc":
+				m.view = viewDashboard
+				return m, nil
+			case "q":
+				m.view = viewDashboard
+				return m, nil
+			}
+			cmd := m.anomalyPanel.Update(msg)
 			return m, cmd
 		}
 
@@ -186,9 +201,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.view = viewMap
 			return m, nil
 		case "f":
-			// Toggle config/file management view
 			m.configPanel.refreshList()
 			m.view = viewConfig
+			return m, nil
+		case "a":
+			m.view = viewAnomaly
+			return m, nil
+		case "A":
+			if m.engine != nil {
+				m.engine.ClearAnomalies()
+			}
 			return m, nil
 		default:
 			// Forward to the focused panel.
@@ -302,6 +324,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			f.Rate = msg.Flow.Rate
 			f.AppID = msg.Flow.AppID
 			f.Enabled = msg.Flow.Enabled
+			f.ConnectionStyle = msg.Flow.ConnectionStyle
 			_ = m.engine.AddFlow(f)
 		}
 		m.saveConfig()
@@ -322,6 +345,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.saveConfig()
 	case CollectorDeletedMsg:
 		m.saveConfig()
+
+	// Anomaly messages.
+	case AnomalyStartMsg:
+		if m.engine != nil {
+			m.engine.StartAnomaly(msg.Scenario, msg.Duration, msg.Intensity, msg.Targets, msg.Count)
+		}
+		m.view = viewDashboard
 
 	// Config management messages.
 	case ConfigOpenMsg:
@@ -422,6 +452,8 @@ func (m *Model) updatePanelSizes() {
 		m.mapPanel.SetSize(m.width-4, m.height-6)
 	case viewConfig:
 		m.configPanel.SetSize(m.width-4, m.height-6)
+	case viewAnomaly:
+		m.anomalyPanel.SetSize(m.width-4, m.height-6)
 	default:
 		leftWidth := m.width / 3
 		rightWidth := m.width - leftWidth - 4
@@ -449,6 +481,8 @@ func (m Model) View() string {
 		return m.renderMapView(title)
 	case viewConfig:
 		return m.renderConfigView(title)
+	case viewAnomaly:
+		return m.renderAnomalyView(title)
 	default:
 		return m.renderDashboard(title)
 	}
@@ -491,6 +525,14 @@ func (m Model) renderMapView(title string) string {
 		m.renderNavHint())
 }
 
+func (m Model) renderAnomalyView(title string) string {
+	anomalyStyle := panelStyle.Width(m.width - 2).Height(m.height - 6).
+		BorderForeground(colorAnomalyBanner)
+	content := m.anomalyPanel.View()
+	return lipgloss.JoinVertical(lipgloss.Left, title, anomalyStyle.Render(content),
+		m.renderNavHint())
+}
+
 func (m Model) renderConfigView(title string) string {
 	cfgStyle := panelStyle.Width(m.width - 2).Height(m.height - 6).
 		BorderForeground(colorBright)
@@ -501,7 +543,7 @@ func (m Model) renderConfigView(title string) string {
 
 func (m Model) renderNavHint() string {
 	return lipgloss.NewStyle().Foreground(colorAccent).
-		Render("  [Esc] Dashboard  [M] Map  [F] File  [Q] Quit")
+		Render("  [Esc] Dashboard  [M] Map  [F] File  [A] Anomaly  [Q] Quit")
 }
 
 // renderStatusBar draws the bottom status bar with collectors, engine status,
@@ -536,8 +578,22 @@ func (m Model) renderStatusBar() string {
 		pktsPerSec = totalBps / 8 / 800
 	}
 
+	// Anomaly status
+	if m.engine != nil {
+		active := m.engine.ActiveAnomalies()
+		if len(active) > 0 {
+			var parts []string
+			for _, a := range active {
+				remaining := a.Remaining()
+				parts = append(parts, fmt.Sprintf("%s (%s)", a.Scenario.Name, remaining.Truncate(time.Second)))
+			}
+			anomalyLine := "  ANOMALY: " + strings.Join(parts, " | ")
+			content += "\n" + lipgloss.NewStyle().Foreground(colorAnomalyBanner).Bold(true).Render(anomalyLine)
+		}
+	}
+
 	engineStr := engineStatus(m.engine)
-	statusLine := fmt.Sprintf("  ENGINE: %s  |  %s  |  ●%d flows  |  ↑%s pkt/s  |  Tab:panels  [M]ap  [F]ile  q:quit",
+	statusLine := fmt.Sprintf("  ENGINE: %s  |  %s  |  ●%d flows  |  ↑%s pkt/s  |  Tab:panels  [M]ap  [F]ile  [A]nomaly  q:quit",
 		engineStr,
 		throughput,
 		activeCount,
@@ -590,15 +646,16 @@ func (m *Model) saveConfig() {
 	m.cfg.Flows = make([]config.FlowConfig, len(m.flowPanel.flows))
 	for i, fd := range m.flowPanel.flows {
 		m.cfg.Flows[i] = config.FlowConfig{
-			Name:        fd.Name,
-			Source:      fd.Source,
-			SourcePort:  fd.SrcPort,
-			Destination: fd.Dest,
-			DestPort:    fd.DstPort,
-			Protocol:    fd.Protocol,
-			Rate:        fd.Rate,
-			AppID:       fd.AppID,
-			Enabled:     fd.Enabled,
+			Name:            fd.Name,
+			Source:          fd.Source,
+			SourcePort:      fd.SrcPort,
+			Destination:     fd.Dest,
+			DestPort:        fd.DstPort,
+			Protocol:        fd.Protocol,
+			Rate:            fd.Rate,
+			AppID:           fd.AppID,
+			Enabled:         fd.Enabled,
+			ConnectionStyle: fd.ConnectionStyle,
 		}
 	}
 

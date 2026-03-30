@@ -153,6 +153,12 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/configs", s.cors(s.handleConfigs))
 	s.mux.HandleFunc("/api/configs/", s.cors(s.handleConfigAction))
 
+	s.mux.HandleFunc("/api/anomaly/scenarios", s.cors(s.handleAnomalyScenarios))
+	s.mux.HandleFunc("/api/anomaly/active", s.cors(s.handleAnomalyActive))
+	s.mux.HandleFunc("/api/anomaly/start", s.cors(s.handleAnomalyStart))
+	s.mux.HandleFunc("/api/anomaly/stop", s.cors(s.handleAnomalyStop))
+	s.mux.HandleFunc("/api/anomaly/clear", s.cors(s.handleAnomalyClear))
+
 	s.mux.HandleFunc("/ws", s.handleWebSocket)
 
 	// Serve embedded static files (index.html, css/, js/).

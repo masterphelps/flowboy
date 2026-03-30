@@ -1,0 +1,3554 @@
+# ═══════════════════════════════════════════════════════════════════
+# ACME Manufacturing — FlowBoy Config
+# ═══════════════════════════════════════════════════════════════════
+# Fortune 500 anvil manufacturer | 12 sites | ~775 hosts
+#
+# Sites:
+#   DAL = Dallas HQ (10.10.x.x)        CHI = Chicago DR (10.20.x.x)
+#   PIT = Pittsburgh Plant (10.30.x.x)  DET = Detroit Plant (10.31.x.x)
+#   BHM = Birmingham Plant (10.32.x.x)  NYC = New York Office (10.33.x.x)
+#   LAX = Los Angeles Office (10.34.x.x) ATL = Atlanta Office (10.35.x.x)
+#   MEM = Memphis Warehouse (10.36.x.x) LOU = Louisville Warehouse (10.37.x.x)
+#   AUS = Austin R&D (10.38.x.x)       PHX = Phoenix Call Center (10.39.x.x)
+#
+# Traffic patterns:
+#   3-tier web, SAP/HANA ERP, MES-to-ERP, DR replication,
+#   branch-to-HQ, factory SCADA, overnight backup, management,
+#   AD replication, monitoring, email
+# ═══════════════════════════════════════════════════════════════════
+
+machines:
+  - name: DAL-RTR-CORE01
+    ip: 10.10.1.1
+    mask: 24
+  - name: DAL-RTR-CORE02
+    ip: 10.10.1.2
+    mask: 24
+  - name: DAL-SW-CORE01
+    ip: 10.10.1.3
+    mask: 24
+  - name: DAL-SW-CORE02
+    ip: 10.10.1.4
+    mask: 24
+  - name: DAL-SW-DIST01
+    ip: 10.10.1.5
+    mask: 24
+  - name: DAL-SW-DIST02
+    ip: 10.10.1.6
+    mask: 24
+  - name: DAL-LB-01
+    ip: 10.10.2.1
+    mask: 24
+  - name: DAL-LB-02
+    ip: 10.10.2.2
+    mask: 24
+  - name: DAL-DC01
+    ip: 10.10.3.10
+    mask: 24
+  - name: DAL-DC02
+    ip: 10.10.3.11
+    mask: 24
+  - name: DAL-DC03
+    ip: 10.10.3.12
+    mask: 24
+  - name: DAL-DNS01
+    ip: 10.10.3.20
+    mask: 24
+  - name: DAL-DNS02
+    ip: 10.10.3.21
+    mask: 24
+  - name: DAL-DHCP01
+    ip: 10.10.3.30
+    mask: 24
+  - name: DAL-DHCP02
+    ip: 10.10.3.31
+    mask: 24
+  - name: DAL-NTP01
+    ip: 10.10.4.10
+    mask: 24
+  - name: DAL-NTP02
+    ip: 10.10.4.11
+    mask: 24
+  - name: DAL-ADFS01
+    ip: 10.10.4.20
+    mask: 24
+  - name: DAL-CA-ROOT01
+    ip: 10.10.5.10
+    mask: 24
+  - name: DAL-CA-SUB01
+    ip: 10.10.5.11
+    mask: 24
+  - name: DAL-OCSP-01
+    ip: 10.10.5.20
+    mask: 24
+  - name: DAL-CRL-01
+    ip: 10.10.5.30
+    mask: 24
+  - name: DAL-JUMP-01
+    ip: 10.10.6.10
+    mask: 24
+  - name: DAL-JUMP-02
+    ip: 10.10.6.11
+    mask: 24
+  - name: DAL-JUMP-03
+    ip: 10.10.6.12
+    mask: 24
+  - name: DAL-PAM-01
+    ip: 10.10.6.20
+    mask: 24
+  - name: DAL-PAM-02
+    ip: 10.10.6.21
+    mask: 24
+  - name: DAL-BASTION01
+    ip: 10.10.6.30
+    mask: 24
+  - name: DAL-VEEAM-01
+    ip: 10.10.7.10
+    mask: 24
+  - name: DAL-VEEAM-02
+    ip: 10.10.7.11
+    mask: 24
+  - name: DAL-VEEAM-PRX01
+    ip: 10.10.7.20
+    mask: 24
+  - name: DAL-VEEAM-PRX02
+    ip: 10.10.7.21
+    mask: 24
+  - name: DAL-TAPE-01
+    ip: 10.10.8.10
+    mask: 24
+  - name: DAL-TAPE-02
+    ip: 10.10.8.11
+    mask: 24
+  - name: DAL-DEDUP-01
+    ip: 10.10.8.20
+    mask: 24
+  - name: DAL-DEDUP-02
+    ip: 10.10.8.21
+    mask: 24
+  - name: DAL-ZABBIX-01
+    ip: 10.10.9.10
+    mask: 24
+  - name: DAL-ZABBIX-02
+    ip: 10.10.9.11
+    mask: 24
+  - name: DAL-ZABBIX-PRX01
+    ip: 10.10.9.20
+    mask: 24
+  - name: DAL-GRAFANA-01
+    ip: 10.10.9.30
+    mask: 24
+  - name: DAL-GRAFANA-02
+    ip: 10.10.9.31
+    mask: 24
+  - name: DAL-SYSLOG-01
+    ip: 10.10.10.10
+    mask: 24
+  - name: DAL-SYSLOG-02
+    ip: 10.10.10.11
+    mask: 24
+  - name: DAL-SNMPTRAP-01
+    ip: 10.10.10.20
+    mask: 24
+  - name: DAL-PRTG-01
+    ip: 10.10.10.30
+    mask: 24
+  - name: DAL-NAGIOS-01
+    ip: 10.10.10.31
+    mask: 24
+  - name: DAL-WSUS-01
+    ip: 10.10.11.10
+    mask: 24
+  - name: DAL-WSUS-02
+    ip: 10.10.11.11
+    mask: 24
+  - name: DAL-SCCM-01
+    ip: 10.10.11.20
+    mask: 24
+  - name: DAL-SCCM-DP01
+    ip: 10.10.11.21
+    mask: 24
+  - name: DAL-VPN-01
+    ip: 10.10.12.1
+    mask: 24
+  - name: DAL-VPN-02
+    ip: 10.10.12.2
+    mask: 24
+  - name: DAL-VPN-SSL01
+    ip: 10.10.12.3
+    mask: 24
+  - name: DAL-VPN-SSL02
+    ip: 10.10.12.4
+    mask: 24
+  - name: DAL-WEB-01
+    ip: 10.10.20.10
+    mask: 24
+  - name: DAL-WEB-02
+    ip: 10.10.20.11
+    mask: 24
+  - name: DAL-WEB-03
+    ip: 10.10.20.12
+    mask: 24
+  - name: DAL-WEB-04
+    ip: 10.10.20.13
+    mask: 24
+  - name: DAL-RPROXY-01
+    ip: 10.10.21.10
+    mask: 24
+  - name: DAL-RPROXY-02
+    ip: 10.10.21.11
+    mask: 24
+  - name: DAL-WAF-01
+    ip: 10.10.21.20
+    mask: 24
+  - name: DAL-FW-DMZ01
+    ip: 10.10.21.30
+    mask: 24
+  - name: DAL-MAILGW-01
+    ip: 10.10.22.10
+    mask: 24
+  - name: DAL-MAILGW-02
+    ip: 10.10.22.11
+    mask: 24
+  - name: DAL-ANTISPAM-01
+    ip: 10.10.22.20
+    mask: 24
+  - name: DAL-ANTISPAM-02
+    ip: 10.10.22.21
+    mask: 24
+  - name: DAL-SFTP-01
+    ip: 10.10.23.10
+    mask: 24
+  - name: DAL-SFTP-02
+    ip: 10.10.23.11
+    mask: 24
+  - name: DAL-SFTP-03
+    ip: 10.10.23.12
+    mask: 24
+  - name: DAL-FW-01
+    ip: 10.10.23.1
+    mask: 24
+  - name: DAL-SPLUNK-IDX01
+    ip: 10.10.24.10
+    mask: 24
+  - name: DAL-SPLUNK-IDX02
+    ip: 10.10.24.11
+    mask: 24
+  - name: DAL-SPLUNK-SH01
+    ip: 10.10.24.20
+    mask: 24
+  - name: DAL-SPLUNK-CM01
+    ip: 10.10.24.30
+    mask: 24
+  - name: DAL-IDS-01
+    ip: 10.10.25.10
+    mask: 24
+  - name: DAL-IDS-02
+    ip: 10.10.25.11
+    mask: 24
+  - name: DAL-IPS-01
+    ip: 10.10.25.20
+    mask: 24
+  - name: DAL-IPS-02
+    ip: 10.10.25.21
+    mask: 24
+  - name: DAL-NESSUS-01
+    ip: 10.10.26.10
+    mask: 24
+  - name: DAL-NESSUS-02
+    ip: 10.10.26.11
+    mask: 24
+  - name: DAL-CROWDSTRIKE-01
+    ip: 10.10.26.20
+    mask: 24
+  - name: DAL-CROWDSTRIKE-02
+    ip: 10.10.26.21
+    mask: 24
+  - name: DAL-SAP-APP01
+    ip: 10.10.30.10
+    mask: 24
+  - name: DAL-SAP-APP02
+    ip: 10.10.30.11
+    mask: 24
+  - name: DAL-SAP-APP03
+    ip: 10.10.30.12
+    mask: 24
+  - name: DAL-SAP-APP04
+    ip: 10.10.30.13
+    mask: 24
+  - name: DAL-SAP-APP05
+    ip: 10.10.31.10
+    mask: 24
+  - name: DAL-SAP-APP06
+    ip: 10.10.31.11
+    mask: 24
+  - name: DAL-SAP-CI01
+    ip: 10.10.31.20
+    mask: 24
+  - name: DAL-SAP-CI02
+    ip: 10.10.31.21
+    mask: 24
+  - name: DAL-SAP-WD01
+    ip: 10.10.31.30
+    mask: 24
+  - name: DAL-SAP-WD02
+    ip: 10.10.31.31
+    mask: 24
+  - name: DAL-SAP-GW01
+    ip: 10.10.31.40
+    mask: 24
+  - name: DAL-SAP-MSG01
+    ip: 10.10.31.41
+    mask: 24
+  - name: DAL-SAP-HANA01
+    ip: 10.10.32.10
+    mask: 24
+  - name: DAL-SAP-HANA02
+    ip: 10.10.32.11
+    mask: 24
+  - name: DAL-SAP-HANA03
+    ip: 10.10.32.12
+    mask: 24
+  - name: DAL-SAP-HANA04
+    ip: 10.10.33.10
+    mask: 24
+  - name: DAL-SAP-HANA05
+    ip: 10.10.33.11
+    mask: 24
+  - name: DAL-SAP-HANA06
+    ip: 10.10.33.12
+    mask: 24
+  - name: DAL-SAP-HANABK01
+    ip: 10.10.33.20
+    mask: 24
+  - name: DAL-SAP-HANABK02
+    ip: 10.10.33.21
+    mask: 24
+  - name: DAL-CRM-CONN01
+    ip: 10.10.34.10
+    mask: 24
+  - name: DAL-CRM-CONN02
+    ip: 10.10.34.11
+    mask: 24
+  - name: DAL-CRM-SYNC01
+    ip: 10.10.34.20
+    mask: 24
+  - name: DAL-CRM-SYNC02
+    ip: 10.10.34.21
+    mask: 24
+  - name: DAL-CRM-API01
+    ip: 10.10.34.30
+    mask: 24
+  - name: DAL-CRM-API02
+    ip: 10.10.34.31
+    mask: 24
+  - name: DAL-HR-CONN01
+    ip: 10.10.35.10
+    mask: 24
+  - name: DAL-HR-CONN02
+    ip: 10.10.35.11
+    mask: 24
+  - name: DAL-HR-RPT01
+    ip: 10.10.35.20
+    mask: 24
+  - name: DAL-HR-RPT02
+    ip: 10.10.35.21
+    mask: 24
+  - name: DAL-FIN-GL01
+    ip: 10.10.36.10
+    mask: 24
+  - name: DAL-FIN-GL02
+    ip: 10.10.36.11
+    mask: 24
+  - name: DAL-FIN-AP01
+    ip: 10.10.36.20
+    mask: 24
+  - name: DAL-FIN-AR01
+    ip: 10.10.36.21
+    mask: 24
+  - name: DAL-FIN-TAX01
+    ip: 10.10.37.10
+    mask: 24
+  - name: DAL-FIN-RPT01
+    ip: 10.10.37.11
+    mask: 24
+  - name: DAL-FIN-BANK01
+    ip: 10.10.37.20
+    mask: 24
+  - name: DAL-FIN-BANK02
+    ip: 10.10.37.21
+    mask: 24
+  - name: DAL-SP-WFE01
+    ip: 10.10.38.10
+    mask: 24
+  - name: DAL-SP-WFE02
+    ip: 10.10.38.11
+    mask: 24
+  - name: DAL-SP-WFE03
+    ip: 10.10.38.12
+    mask: 24
+  - name: DAL-SP-APP01
+    ip: 10.10.38.20
+    mask: 24
+  - name: DAL-SP-APP02
+    ip: 10.10.38.21
+    mask: 24
+  - name: DAL-SP-SRCH01
+    ip: 10.10.39.10
+    mask: 24
+  - name: DAL-SP-SRCH02
+    ip: 10.10.39.11
+    mask: 24
+  - name: DAL-SP-DB01
+    ip: 10.10.39.20
+    mask: 24
+  - name: DAL-EXCH-MB01
+    ip: 10.10.40.10
+    mask: 24
+  - name: DAL-EXCH-MB02
+    ip: 10.10.40.11
+    mask: 24
+  - name: DAL-EXCH-MB03
+    ip: 10.10.40.12
+    mask: 24
+  - name: DAL-EXCH-CAS01
+    ip: 10.10.40.20
+    mask: 24
+  - name: DAL-EXCH-CAS02
+    ip: 10.10.40.21
+    mask: 24
+  - name: DAL-EXCH-HUB01
+    ip: 10.10.41.10
+    mask: 24
+  - name: DAL-EXCH-HUB02
+    ip: 10.10.41.11
+    mask: 24
+  - name: DAL-EXCH-EDGE01
+    ip: 10.10.41.20
+    mask: 24
+  - name: DAL-EXCH-EDGE02
+    ip: 10.10.41.21
+    mask: 24
+  - name: DAL-EXCH-DAG01
+    ip: 10.10.41.30
+    mask: 24
+  - name: DAL-PORTAL-WEB01
+    ip: 10.10.42.10
+    mask: 24
+  - name: DAL-PORTAL-WEB02
+    ip: 10.10.42.11
+    mask: 24
+  - name: DAL-PORTAL-API01
+    ip: 10.10.42.20
+    mask: 24
+  - name: DAL-PORTAL-DB01
+    ip: 10.10.42.30
+    mask: 24
+  - name: DAL-MES-APP01
+    ip: 10.10.43.10
+    mask: 24
+  - name: DAL-MES-APP02
+    ip: 10.10.43.11
+    mask: 24
+  - name: DAL-MES-APP03
+    ip: 10.10.43.12
+    mask: 24
+  - name: DAL-MES-RPT01
+    ip: 10.10.43.20
+    mask: 24
+  - name: DAL-MES-DB01
+    ip: 10.10.44.10
+    mask: 24
+  - name: DAL-MES-DB02
+    ip: 10.10.44.11
+    mask: 24
+  - name: DAL-MES-INT01
+    ip: 10.10.44.20
+    mask: 24
+  - name: DAL-MES-INT02
+    ip: 10.10.44.21
+    mask: 24
+  - name: DAL-PBI-GW01
+    ip: 10.10.45.10
+    mask: 24
+  - name: DAL-PBI-GW02
+    ip: 10.10.45.11
+    mask: 24
+  - name: DAL-SSRS-01
+    ip: 10.10.45.20
+    mask: 24
+  - name: DAL-SSRS-02
+    ip: 10.10.45.21
+    mask: 24
+  - name: DAL-SSIS-01
+    ip: 10.10.45.30
+    mask: 24
+  - name: DAL-SSAS-01
+    ip: 10.10.45.31
+    mask: 24
+  - name: DAL-SQL-01
+    ip: 10.10.50.10
+    mask: 24
+  - name: DAL-SQL-02
+    ip: 10.10.50.11
+    mask: 24
+  - name: DAL-SQL-03
+    ip: 10.10.50.12
+    mask: 24
+  - name: DAL-SQL-04
+    ip: 10.10.50.13
+    mask: 24
+  - name: DAL-SQL-05
+    ip: 10.10.50.14
+    mask: 24
+  - name: DAL-SQL-06
+    ip: 10.10.50.15
+    mask: 24
+  - name: DAL-SQL-AG01
+    ip: 10.10.51.10
+    mask: 24
+  - name: DAL-SQL-AG02
+    ip: 10.10.51.11
+    mask: 24
+  - name: DAL-SQL-AG03
+    ip: 10.10.51.12
+    mask: 24
+  - name: DAL-SQL-RPT01
+    ip: 10.10.51.20
+    mask: 24
+  - name: DAL-SQL-RPT02
+    ip: 10.10.51.21
+    mask: 24
+  - name: DAL-SQL-DW01
+    ip: 10.10.51.30
+    mask: 24
+  - name: DAL-ORA-01
+    ip: 10.10.52.10
+    mask: 24
+  - name: DAL-ORA-02
+    ip: 10.10.52.11
+    mask: 24
+  - name: DAL-ORA-03
+    ip: 10.10.52.12
+    mask: 24
+  - name: DAL-ORA-RAC01
+    ip: 10.10.52.20
+    mask: 24
+  - name: DAL-ORA-RAC02
+    ip: 10.10.52.21
+    mask: 24
+  - name: DAL-ORA-DG01
+    ip: 10.10.52.30
+    mask: 24
+  - name: DAL-PG-01
+    ip: 10.10.53.10
+    mask: 24
+  - name: DAL-PG-02
+    ip: 10.10.53.11
+    mask: 24
+  - name: DAL-PG-REP01
+    ip: 10.10.53.20
+    mask: 24
+  - name: DAL-PG-REP02
+    ip: 10.10.53.21
+    mask: 24
+  - name: DAL-REDIS-01
+    ip: 10.10.54.10
+    mask: 24
+  - name: DAL-REDIS-02
+    ip: 10.10.54.11
+    mask: 24
+  - name: DAL-REDIS-SENT01
+    ip: 10.10.54.20
+    mask: 24
+  - name: DAL-REDIS-SENT02
+    ip: 10.10.54.21
+    mask: 24
+  - name: DAL-IIS-01
+    ip: 10.10.60.10
+    mask: 24
+  - name: DAL-IIS-02
+    ip: 10.10.60.11
+    mask: 24
+  - name: DAL-IIS-03
+    ip: 10.10.60.12
+    mask: 24
+  - name: DAL-IIS-04
+    ip: 10.10.60.13
+    mask: 24
+  - name: DAL-IIS-05
+    ip: 10.10.60.14
+    mask: 24
+  - name: DAL-IIS-06
+    ip: 10.10.61.10
+    mask: 24
+  - name: DAL-IIS-07
+    ip: 10.10.61.11
+    mask: 24
+  - name: DAL-IIS-08
+    ip: 10.10.61.12
+    mask: 24
+  - name: DAL-IIS-09
+    ip: 10.10.61.13
+    mask: 24
+  - name: DAL-IIS-10
+    ip: 10.10.61.14
+    mask: 24
+  - name: DAL-APP-NET01
+    ip: 10.10.62.10
+    mask: 24
+  - name: DAL-APP-NET02
+    ip: 10.10.62.11
+    mask: 24
+  - name: DAL-APP-NET03
+    ip: 10.10.62.12
+    mask: 24
+  - name: DAL-APP-NET04
+    ip: 10.10.62.13
+    mask: 24
+  - name: DAL-APP-NET05
+    ip: 10.10.62.14
+    mask: 24
+  - name: DAL-APP-NET06
+    ip: 10.10.63.10
+    mask: 24
+  - name: DAL-APP-NET07
+    ip: 10.10.63.11
+    mask: 24
+  - name: DAL-APP-NET08
+    ip: 10.10.63.12
+    mask: 24
+  - name: DAL-APP-NET09
+    ip: 10.10.63.13
+    mask: 24
+  - name: DAL-APP-NET10
+    ip: 10.10.63.14
+    mask: 24
+  - name: DAL-APP-JV01
+    ip: 10.10.64.10
+    mask: 24
+  - name: DAL-APP-JV02
+    ip: 10.10.64.11
+    mask: 24
+  - name: DAL-APP-JV03
+    ip: 10.10.64.12
+    mask: 24
+  - name: DAL-APP-JV04
+    ip: 10.10.64.13
+    mask: 24
+  - name: DAL-APP-JV05
+    ip: 10.10.64.14
+    mask: 24
+  - name: DAL-APP-JV06
+    ip: 10.10.64.15
+    mask: 24
+  - name: DAL-WLC-01
+    ip: 10.10.70.1
+    mask: 24
+  - name: DAL-WLC-02
+    ip: 10.10.70.2
+    mask: 24
+  - name: DAL-AP-01
+    ip: 10.10.70.10
+    mask: 24
+  - name: DAL-AP-02
+    ip: 10.10.70.11
+    mask: 24
+  - name: DAL-AP-03
+    ip: 10.10.70.12
+    mask: 24
+  - name: DAL-AP-04
+    ip: 10.10.70.13
+    mask: 24
+  - name: DAL-AP-05
+    ip: 10.10.71.10
+    mask: 24
+  - name: DAL-AP-06
+    ip: 10.10.71.11
+    mask: 24
+  - name: DAL-AP-07
+    ip: 10.10.71.12
+    mask: 24
+  - name: DAL-AP-08
+    ip: 10.10.71.13
+    mask: 24
+  - name: DAL-AP-09
+    ip: 10.10.72.10
+    mask: 24
+  - name: DAL-AP-10
+    ip: 10.10.72.11
+    mask: 24
+  - name: DAL-AP-11
+    ip: 10.10.72.12
+    mask: 24
+  - name: DAL-AP-12
+    ip: 10.10.72.13
+    mask: 24
+  - name: DAL-AP-13
+    ip: 10.10.72.14
+    mask: 24
+  - name: DAL-AP-14
+    ip: 10.10.72.15
+    mask: 24
+  - name: DAL-AP-15
+    ip: 10.10.72.16
+    mask: 24
+  - name: DAL-WS-01
+    ip: 10.10.73.50
+    mask: 24
+  - name: DAL-WS-02
+    ip: 10.10.73.51
+    mask: 24
+  - name: DAL-WS-03
+    ip: 10.10.73.52
+    mask: 24
+  - name: DAL-WS-04
+    ip: 10.10.73.53
+    mask: 24
+  - name: DAL-WS-05
+    ip: 10.10.73.54
+    mask: 24
+  - name: DAL-WS-06
+    ip: 10.10.74.50
+    mask: 24
+  - name: DAL-WS-07
+    ip: 10.10.74.51
+    mask: 24
+  - name: DAL-WS-08
+    ip: 10.10.74.52
+    mask: 24
+  - name: DAL-WS-09
+    ip: 10.10.74.53
+    mask: 24
+  - name: DAL-WS-10
+    ip: 10.10.74.54
+    mask: 24
+  - name: DAL-WS-11
+    ip: 10.10.75.50
+    mask: 24
+  - name: DAL-WS-12
+    ip: 10.10.75.51
+    mask: 24
+  - name: DAL-WS-13
+    ip: 10.10.75.52
+    mask: 24
+  - name: DAL-WS-14
+    ip: 10.10.75.53
+    mask: 24
+  - name: DAL-WS-15
+    ip: 10.10.75.54
+    mask: 24
+  - name: DAL-WS-16
+    ip: 10.10.75.55
+    mask: 24
+  - name: DAL-WS-17
+    ip: 10.10.75.56
+    mask: 24
+  - name: DAL-WS-18
+    ip: 10.10.75.57
+    mask: 24
+  - name: DAL-WS-19
+    ip: 10.10.75.58
+    mask: 24
+  - name: DAL-WS-20
+    ip: 10.10.75.59
+    mask: 24
+  - name: DAL-WS-21
+    ip: 10.10.75.60
+    mask: 24
+  - name: DAL-WS-22
+    ip: 10.10.75.61
+    mask: 24
+  - name: DAL-WS-23
+    ip: 10.10.75.62
+    mask: 24
+  - name: DAL-WS-24
+    ip: 10.10.75.63
+    mask: 24
+  - name: DAL-WS-25
+    ip: 10.10.75.64
+    mask: 24
+  - name: DAL-WS-26
+    ip: 10.10.73.60
+    mask: 24
+  - name: DAL-WS-27
+    ip: 10.10.73.61
+    mask: 24
+  - name: DAL-WS-28
+    ip: 10.10.73.62
+    mask: 24
+  - name: DAL-WS-29
+    ip: 10.10.74.60
+    mask: 24
+  - name: DAL-WS-30
+    ip: 10.10.74.61
+    mask: 24
+  - name: DAL-PBX-01
+    ip: 10.10.76.10
+    mask: 24
+  - name: DAL-PBX-02
+    ip: 10.10.76.11
+    mask: 24
+  - name: DAL-SBC-01
+    ip: 10.10.76.20
+    mask: 24
+  - name: DAL-SBC-02
+    ip: 10.10.76.21
+    mask: 24
+  - name: DAL-VC-GW01
+    ip: 10.10.77.10
+    mask: 24
+  - name: DAL-VC-GW02
+    ip: 10.10.77.11
+    mask: 24
+  - name: DAL-MFP-01
+    ip: 10.10.78.10
+    mask: 24
+  - name: DAL-MFP-02
+    ip: 10.10.78.11
+    mask: 24
+  - name: DAL-MFP-03
+    ip: 10.10.78.12
+    mask: 24
+  - name: DAL-MFP-04
+    ip: 10.10.78.13
+    mask: 24
+  - name: DAL-BADGE-01
+    ip: 10.10.78.100
+    mask: 24
+  - name: DAL-BADGE-02
+    ip: 10.10.78.101
+    mask: 24
+  - name: DAL-BADGE-03
+    ip: 10.10.78.102
+    mask: 24
+  - name: DAL-BADGE-04
+    ip: 10.10.78.103
+    mask: 24
+  - name: DAL-THERMO-01
+    ip: 10.10.78.110
+    mask: 24
+  - name: DAL-THERMO-02
+    ip: 10.10.78.111
+    mask: 24
+  - name: DAL-SIGNAGE-01
+    ip: 10.10.78.120
+    mask: 24
+  - name: DAL-SIGNAGE-02
+    ip: 10.10.78.121
+    mask: 24
+  - name: DAL-GITLAB-01
+    ip: 10.10.80.10
+    mask: 24
+  - name: DAL-GITLAB-02
+    ip: 10.10.80.11
+    mask: 24
+  - name: DAL-JENKINS-01
+    ip: 10.10.80.20
+    mask: 24
+  - name: DAL-JENKINS-02
+    ip: 10.10.80.21
+    mask: 24
+  - name: DAL-RUNNER-01
+    ip: 10.10.80.30
+    mask: 24
+  - name: DAL-RUNNER-02
+    ip: 10.10.80.31
+    mask: 24
+  - name: DAL-DEV-VM01
+    ip: 10.10.81.10
+    mask: 24
+  - name: DAL-DEV-VM02
+    ip: 10.10.81.11
+    mask: 24
+  - name: DAL-DEV-VM03
+    ip: 10.10.81.12
+    mask: 24
+  - name: DAL-DEV-VM04
+    ip: 10.10.81.13
+    mask: 24
+  - name: DAL-DEV-VM05
+    ip: 10.10.81.14
+    mask: 24
+  - name: DAL-DEV-VM06
+    ip: 10.10.81.15
+    mask: 24
+  - name: DAL-NEXUS-01
+    ip: 10.10.80.40
+    mask: 24
+  - name: DAL-SONAR-01
+    ip: 10.10.80.50
+    mask: 24
+  - name: DAL-QA-01
+    ip: 10.10.82.10
+    mask: 24
+  - name: DAL-QA-02
+    ip: 10.10.82.11
+    mask: 24
+  - name: DAL-QA-03
+    ip: 10.10.82.12
+    mask: 24
+  - name: DAL-QA-04
+    ip: 10.10.82.13
+    mask: 24
+  - name: DAL-QA-SEL01
+    ip: 10.10.82.20
+    mask: 24
+  - name: DAL-QA-SEL02
+    ip: 10.10.82.21
+    mask: 24
+  - name: DAL-STG-WEB01
+    ip: 10.10.83.10
+    mask: 24
+  - name: DAL-STG-WEB02
+    ip: 10.10.83.11
+    mask: 24
+  - name: DAL-STG-APP01
+    ip: 10.10.83.20
+    mask: 24
+  - name: DAL-STG-APP02
+    ip: 10.10.83.21
+    mask: 24
+  - name: DAL-STG-DB01
+    ip: 10.10.83.30
+    mask: 24
+  - name: DAL-STG-DB02
+    ip: 10.10.83.31
+    mask: 24
+  - name: DAL-K8S-CTRL01
+    ip: 10.10.84.10
+    mask: 24
+  - name: DAL-K8S-CTRL02
+    ip: 10.10.84.11
+    mask: 24
+  - name: DAL-K8S-CTRL03
+    ip: 10.10.84.12
+    mask: 24
+  - name: DAL-K8S-WRK01
+    ip: 10.10.85.10
+    mask: 24
+  - name: DAL-K8S-WRK02
+    ip: 10.10.85.11
+    mask: 24
+  - name: DAL-K8S-WRK03
+    ip: 10.10.85.12
+    mask: 24
+  - name: DAL-K8S-WRK04
+    ip: 10.10.85.13
+    mask: 24
+  - name: DAL-K8S-WRK05
+    ip: 10.10.85.14
+    mask: 24
+  - name: DAL-K8S-WRK06
+    ip: 10.10.85.15
+    mask: 24
+  - name: DAL-K8S-WRK07
+    ip: 10.10.85.16
+    mask: 24
+  - name: DAL-K8S-WRK08
+    ip: 10.10.85.17
+    mask: 24
+  - name: CHI-RTR-CORE01
+    ip: 10.20.1.1
+    mask: 24
+  - name: CHI-SW-CORE01
+    ip: 10.20.1.3
+    mask: 24
+  - name: CHI-SW-CORE02
+    ip: 10.20.1.4
+    mask: 24
+  - name: CHI-LB-01
+    ip: 10.20.2.1
+    mask: 24
+  - name: CHI-DC01
+    ip: 10.20.3.10
+    mask: 24
+  - name: CHI-DC02
+    ip: 10.20.3.11
+    mask: 24
+  - name: CHI-DNS01
+    ip: 10.20.3.20
+    mask: 24
+  - name: CHI-DHCP01
+    ip: 10.20.3.30
+    mask: 24
+  - name: CHI-NTP01
+    ip: 10.20.4.10
+    mask: 24
+  - name: CHI-VPN-01
+    ip: 10.20.12.1
+    mask: 24
+  - name: CHI-VPN-02
+    ip: 10.20.12.2
+    mask: 24
+  - name: CHI-WEB-01
+    ip: 10.20.20.10
+    mask: 24
+  - name: CHI-WEB-02
+    ip: 10.20.20.11
+    mask: 24
+  - name: CHI-WEB-03
+    ip: 10.20.20.12
+    mask: 24
+  - name: CHI-WAF-01
+    ip: 10.20.20.20
+    mask: 24
+  - name: CHI-SPLUNK-IDX01
+    ip: 10.20.24.10
+    mask: 24
+  - name: CHI-SPLUNK-IDX02
+    ip: 10.20.24.11
+    mask: 24
+  - name: CHI-SPLUNK-SH01
+    ip: 10.20.24.20
+    mask: 24
+  - name: CHI-IDS-01
+    ip: 10.20.24.30
+    mask: 24
+  - name: CHI-SAP-APP01
+    ip: 10.20.30.10
+    mask: 24
+  - name: CHI-SAP-APP02
+    ip: 10.20.30.11
+    mask: 24
+  - name: CHI-SAP-APP03
+    ip: 10.20.30.12
+    mask: 24
+  - name: CHI-SAP-CI01
+    ip: 10.20.30.20
+    mask: 24
+  - name: CHI-SAP-WD01
+    ip: 10.20.30.30
+    mask: 24
+  - name: CHI-SAP-GW01
+    ip: 10.20.30.40
+    mask: 24
+  - name: CHI-SAP-HANA01
+    ip: 10.20.32.10
+    mask: 24
+  - name: CHI-SAP-HANA02
+    ip: 10.20.32.11
+    mask: 24
+  - name: CHI-SAP-HANA03
+    ip: 10.20.32.12
+    mask: 24
+  - name: CHI-SAP-HANABK01
+    ip: 10.20.32.20
+    mask: 24
+  - name: CHI-SAP-HANABK02
+    ip: 10.20.32.21
+    mask: 24
+  - name: CHI-SQL-01
+    ip: 10.20.50.10
+    mask: 24
+  - name: CHI-SQL-02
+    ip: 10.20.50.11
+    mask: 24
+  - name: CHI-SQL-03
+    ip: 10.20.50.12
+    mask: 24
+  - name: CHI-SQL-AG01
+    ip: 10.20.50.20
+    mask: 24
+  - name: CHI-SQL-AG02
+    ip: 10.20.50.21
+    mask: 24
+  - name: CHI-SQL-RPT01
+    ip: 10.20.50.30
+    mask: 24
+  - name: CHI-SQL-DW01
+    ip: 10.20.50.31
+    mask: 24
+  - name: CHI-ORA-01
+    ip: 10.20.52.10
+    mask: 24
+  - name: CHI-ORA-02
+    ip: 10.20.52.11
+    mask: 24
+  - name: CHI-ORA-DG01
+    ip: 10.20.52.20
+    mask: 24
+  - name: CHI-EXCH-MB01
+    ip: 10.20.40.10
+    mask: 24
+  - name: CHI-EXCH-MB02
+    ip: 10.20.40.11
+    mask: 24
+  - name: CHI-EXCH-CAS01
+    ip: 10.20.40.20
+    mask: 24
+  - name: CHI-EXCH-HUB01
+    ip: 10.20.40.30
+    mask: 24
+  - name: CHI-EXCH-DAG01
+    ip: 10.20.40.40
+    mask: 24
+  - name: CHI-FIN-GL01
+    ip: 10.20.36.10
+    mask: 24
+  - name: CHI-FIN-AP01
+    ip: 10.20.36.20
+    mask: 24
+  - name: CHI-FIN-AR01
+    ip: 10.20.36.21
+    mask: 24
+  - name: CHI-FIN-RPT01
+    ip: 10.20.36.30
+    mask: 24
+  - name: CHI-VEEAM-01
+    ip: 10.20.7.10
+    mask: 24
+  - name: CHI-VEEAM-PRX01
+    ip: 10.20.7.20
+    mask: 24
+  - name: CHI-TAPE-01
+    ip: 10.20.7.30
+    mask: 24
+  - name: CHI-DEDUP-01
+    ip: 10.20.7.40
+    mask: 24
+  - name: CHI-VEEAM-02
+    ip: 10.20.7.11
+    mask: 24
+  - name: CHI-TAPE-02
+    ip: 10.20.7.31
+    mask: 24
+  - name: CHI-ZABBIX-01
+    ip: 10.20.9.10
+    mask: 24
+  - name: CHI-GRAFANA-01
+    ip: 10.20.9.20
+    mask: 24
+  - name: CHI-SYSLOG-01
+    ip: 10.20.9.30
+    mask: 24
+  - name: CHI-PRTG-01
+    ip: 10.20.9.40
+    mask: 24
+  - name: CHI-NAGIOS-01
+    ip: 10.20.9.41
+    mask: 24
+  - name: CHI-SNMPTRAP-01
+    ip: 10.20.9.50
+    mask: 24
+  - name: CHI-MES-APP01
+    ip: 10.20.43.10
+    mask: 24
+  - name: CHI-MES-APP02
+    ip: 10.20.43.11
+    mask: 24
+  - name: CHI-MES-DB01
+    ip: 10.20.43.20
+    mask: 24
+  - name: CHI-MES-RPT01
+    ip: 10.20.43.30
+    mask: 24
+  - name: CHI-MES-INT01
+    ip: 10.20.43.40
+    mask: 24
+  - name: CHI-IIS-01
+    ip: 10.20.60.10
+    mask: 24
+  - name: CHI-IIS-02
+    ip: 10.20.60.11
+    mask: 24
+  - name: CHI-IIS-03
+    ip: 10.20.60.12
+    mask: 24
+  - name: CHI-IIS-04
+    ip: 10.20.60.13
+    mask: 24
+  - name: CHI-IIS-05
+    ip: 10.20.60.14
+    mask: 24
+  - name: CHI-IIS-06
+    ip: 10.20.60.15
+    mask: 24
+  - name: CHI-IIS-07
+    ip: 10.20.60.16
+    mask: 24
+  - name: CHI-APP-NET01
+    ip: 10.20.62.10
+    mask: 24
+  - name: CHI-APP-NET02
+    ip: 10.20.62.11
+    mask: 24
+  - name: CHI-APP-NET03
+    ip: 10.20.62.12
+    mask: 24
+  - name: CHI-APP-NET04
+    ip: 10.20.62.13
+    mask: 24
+  - name: CHI-APP-NET05
+    ip: 10.20.62.14
+    mask: 24
+  - name: CHI-APP-NET06
+    ip: 10.20.62.15
+    mask: 24
+  - name: CHI-APP-NET07
+    ip: 10.20.62.16
+    mask: 24
+  - name: PIT-DC01
+    ip: 10.30.1.10
+    mask: 24
+  - name: PIT-DNS01
+    ip: 10.30.1.11
+    mask: 24
+  - name: PIT-FILE01
+    ip: 10.30.1.20
+    mask: 24
+  - name: PIT-FILE02
+    ip: 10.30.1.21
+    mask: 24
+  - name: PIT-PRINT01
+    ip: 10.30.1.30
+    mask: 24
+  - name: PIT-WSUS-01
+    ip: 10.30.1.40
+    mask: 24
+  - name: PIT-VEEAM-01
+    ip: 10.30.1.50
+    mask: 24
+  - name: PIT-MON-01
+    ip: 10.30.1.51
+    mask: 24
+  - name: PIT-DHCP01
+    ip: 10.30.1.52
+    mask: 24
+  - name: PIT-WLC-01
+    ip: 10.30.2.1
+    mask: 24
+  - name: PIT-AP-01
+    ip: 10.30.2.10
+    mask: 24
+  - name: PIT-AP-02
+    ip: 10.30.2.11
+    mask: 24
+  - name: PIT-AP-03
+    ip: 10.30.2.12
+    mask: 24
+  - name: PIT-AP-04
+    ip: 10.30.2.13
+    mask: 24
+  - name: PIT-AP-05
+    ip: 10.30.2.14
+    mask: 24
+  - name: PIT-WS-01
+    ip: 10.30.3.50
+    mask: 24
+  - name: PIT-WS-02
+    ip: 10.30.3.51
+    mask: 24
+  - name: PIT-WS-03
+    ip: 10.30.3.52
+    mask: 24
+  - name: PIT-WS-04
+    ip: 10.30.3.53
+    mask: 24
+  - name: PIT-WS-05
+    ip: 10.30.3.54
+    mask: 24
+  - name: PIT-WS-06
+    ip: 10.30.3.55
+    mask: 24
+  - name: PIT-WS-07
+    ip: 10.30.3.56
+    mask: 24
+  - name: PIT-WS-08
+    ip: 10.30.3.57
+    mask: 24
+  - name: PIT-WS-09
+    ip: 10.30.3.58
+    mask: 24
+  - name: PIT-WS-10
+    ip: 10.30.3.59
+    mask: 24
+  - name: PIT-WS-11
+    ip: 10.30.3.60
+    mask: 24
+  - name: PIT-WS-12
+    ip: 10.30.3.61
+    mask: 24
+  - name: PIT-PBX-01
+    ip: 10.30.4.10
+    mask: 24
+  - name: PIT-SBC-01
+    ip: 10.30.4.20
+    mask: 24
+  - name: PIT-VC-01
+    ip: 10.30.4.30
+    mask: 24
+  - name: PIT-PHONE-GW01
+    ip: 10.30.4.40
+    mask: 24
+  - name: PIT-NVR-01
+    ip: 10.30.5.10
+    mask: 24
+  - name: PIT-NVR-02
+    ip: 10.30.5.11
+    mask: 24
+  - name: PIT-CAM-01
+    ip: 10.30.5.100
+    mask: 24
+  - name: PIT-CAM-02
+    ip: 10.30.5.101
+    mask: 24
+  - name: PIT-CAM-03
+    ip: 10.30.5.102
+    mask: 24
+  - name: PIT-CAM-04
+    ip: 10.30.5.103
+    mask: 24
+  - name: PIT-PLC-01
+    ip: 10.30.10.10
+    mask: 24
+  - name: PIT-PLC-02
+    ip: 10.30.10.11
+    mask: 24
+  - name: PIT-PLC-03
+    ip: 10.30.10.12
+    mask: 24
+  - name: PIT-PLC-04
+    ip: 10.30.10.13
+    mask: 24
+  - name: PIT-HMI-01
+    ip: 10.30.10.20
+    mask: 24
+  - name: PIT-HMI-02
+    ip: 10.30.10.21
+    mask: 24
+  - name: PIT-HMI-03
+    ip: 10.30.10.22
+    mask: 24
+  - name: PIT-HISTORIAN-01
+    ip: 10.30.11.10
+    mask: 24
+  - name: PIT-HISTORIAN-02
+    ip: 10.30.11.11
+    mask: 24
+  - name: PIT-SCADA-GW01
+    ip: 10.30.11.20
+    mask: 24
+  - name: PIT-RTU-01
+    ip: 10.30.11.30
+    mask: 24
+  - name: PIT-RTU-02
+    ip: 10.30.11.31
+    mask: 24
+  - name: PIT-DCS-01
+    ip: 10.30.11.40
+    mask: 24
+  - name: PIT-DRIVE-01
+    ip: 10.30.11.50
+    mask: 24
+  - name: PIT-MES-TERM01
+    ip: 10.30.12.10
+    mask: 24
+  - name: PIT-MES-TERM02
+    ip: 10.30.12.11
+    mask: 24
+  - name: PIT-MES-TERM03
+    ip: 10.30.12.12
+    mask: 24
+  - name: PIT-MES-TERM04
+    ip: 10.30.12.13
+    mask: 24
+  - name: PIT-MES-TERM05
+    ip: 10.30.12.14
+    mask: 24
+  - name: PIT-MES-TERM06
+    ip: 10.30.12.15
+    mask: 24
+  - name: PIT-MES-SRV01
+    ip: 10.30.12.50
+    mask: 24
+  - name: PIT-MES-SRV02
+    ip: 10.30.12.51
+    mask: 24
+  - name: PIT-MES-TERM07
+    ip: 10.30.12.16
+    mask: 24
+  - name: PIT-MES-TERM08
+    ip: 10.30.12.17
+    mask: 24
+  - name: DET-DC01
+    ip: 10.31.1.10
+    mask: 24
+  - name: DET-DNS01
+    ip: 10.31.1.11
+    mask: 24
+  - name: DET-FILE01
+    ip: 10.31.1.20
+    mask: 24
+  - name: DET-PRINT01
+    ip: 10.31.1.30
+    mask: 24
+  - name: DET-WSUS-01
+    ip: 10.31.1.40
+    mask: 24
+  - name: DET-VEEAM-01
+    ip: 10.31.1.50
+    mask: 24
+  - name: DET-WLC-01
+    ip: 10.31.2.1
+    mask: 24
+  - name: DET-AP-01
+    ip: 10.31.2.10
+    mask: 24
+  - name: DET-AP-02
+    ip: 10.31.2.11
+    mask: 24
+  - name: DET-AP-03
+    ip: 10.31.2.12
+    mask: 24
+  - name: DET-AP-04
+    ip: 10.31.2.13
+    mask: 24
+  - name: DET-WS-01
+    ip: 10.31.3.50
+    mask: 24
+  - name: DET-WS-02
+    ip: 10.31.3.51
+    mask: 24
+  - name: DET-WS-03
+    ip: 10.31.3.52
+    mask: 24
+  - name: DET-WS-04
+    ip: 10.31.3.53
+    mask: 24
+  - name: DET-WS-05
+    ip: 10.31.3.54
+    mask: 24
+  - name: DET-WS-06
+    ip: 10.31.3.55
+    mask: 24
+  - name: DET-WS-07
+    ip: 10.31.3.56
+    mask: 24
+  - name: DET-WS-08
+    ip: 10.31.3.57
+    mask: 24
+  - name: DET-WS-09
+    ip: 10.31.3.58
+    mask: 24
+  - name: DET-WS-10
+    ip: 10.31.3.59
+    mask: 24
+  - name: DET-WS-11
+    ip: 10.31.3.60
+    mask: 24
+  - name: DET-WS-12
+    ip: 10.31.3.61
+    mask: 24
+  - name: DET-PBX-01
+    ip: 10.31.4.10
+    mask: 24
+  - name: DET-SBC-01
+    ip: 10.31.4.20
+    mask: 24
+  - name: DET-VC-01
+    ip: 10.31.4.30
+    mask: 24
+  - name: DET-NVR-01
+    ip: 10.31.5.10
+    mask: 24
+  - name: DET-CAM-01
+    ip: 10.31.5.100
+    mask: 24
+  - name: DET-CAM-02
+    ip: 10.31.5.101
+    mask: 24
+  - name: DET-CAM-03
+    ip: 10.31.5.102
+    mask: 24
+  - name: DET-CAM-04
+    ip: 10.31.5.103
+    mask: 24
+  - name: DET-PLC-01
+    ip: 10.31.10.10
+    mask: 24
+  - name: DET-PLC-02
+    ip: 10.31.10.11
+    mask: 24
+  - name: DET-PLC-03
+    ip: 10.31.10.12
+    mask: 24
+  - name: DET-HMI-01
+    ip: 10.31.10.20
+    mask: 24
+  - name: DET-HMI-02
+    ip: 10.31.10.21
+    mask: 24
+  - name: DET-HISTORIAN-01
+    ip: 10.31.11.10
+    mask: 24
+  - name: DET-SCADA-GW01
+    ip: 10.31.11.20
+    mask: 24
+  - name: DET-RTU-01
+    ip: 10.31.11.30
+    mask: 24
+  - name: DET-RTU-02
+    ip: 10.31.11.31
+    mask: 24
+  - name: DET-DCS-01
+    ip: 10.31.11.40
+    mask: 24
+  - name: DET-DRIVE-01
+    ip: 10.31.11.50
+    mask: 24
+  - name: DET-MES-TERM01
+    ip: 10.31.12.10
+    mask: 24
+  - name: DET-MES-TERM02
+    ip: 10.31.12.11
+    mask: 24
+  - name: DET-MES-TERM03
+    ip: 10.31.12.12
+    mask: 24
+  - name: DET-MES-TERM04
+    ip: 10.31.12.13
+    mask: 24
+  - name: DET-MES-TERM05
+    ip: 10.31.12.14
+    mask: 24
+  - name: DET-MES-SRV01
+    ip: 10.31.12.50
+    mask: 24
+  - name: DET-MES-TERM06
+    ip: 10.31.12.15
+    mask: 24
+  - name: DET-MES-TERM07
+    ip: 10.31.12.16
+    mask: 24
+  - name: DET-MES-SRV02
+    ip: 10.31.12.51
+    mask: 24
+  - name: BHM-DC01
+    ip: 10.32.1.10
+    mask: 24
+  - name: BHM-DNS01
+    ip: 10.32.1.11
+    mask: 24
+  - name: BHM-FILE01
+    ip: 10.32.1.20
+    mask: 24
+  - name: BHM-PRINT01
+    ip: 10.32.1.30
+    mask: 24
+  - name: BHM-WSUS-01
+    ip: 10.32.1.40
+    mask: 24
+  - name: BHM-VEEAM-01
+    ip: 10.32.1.50
+    mask: 24
+  - name: BHM-WLC-01
+    ip: 10.32.2.1
+    mask: 24
+  - name: BHM-AP-01
+    ip: 10.32.2.10
+    mask: 24
+  - name: BHM-AP-02
+    ip: 10.32.2.11
+    mask: 24
+  - name: BHM-AP-03
+    ip: 10.32.2.12
+    mask: 24
+  - name: BHM-AP-04
+    ip: 10.32.2.13
+    mask: 24
+  - name: BHM-WS-01
+    ip: 10.32.3.50
+    mask: 24
+  - name: BHM-WS-02
+    ip: 10.32.3.51
+    mask: 24
+  - name: BHM-WS-03
+    ip: 10.32.3.52
+    mask: 24
+  - name: BHM-WS-04
+    ip: 10.32.3.53
+    mask: 24
+  - name: BHM-WS-05
+    ip: 10.32.3.54
+    mask: 24
+  - name: BHM-WS-06
+    ip: 10.32.3.55
+    mask: 24
+  - name: BHM-WS-07
+    ip: 10.32.3.56
+    mask: 24
+  - name: BHM-WS-08
+    ip: 10.32.3.57
+    mask: 24
+  - name: BHM-WS-09
+    ip: 10.32.3.58
+    mask: 24
+  - name: BHM-WS-10
+    ip: 10.32.3.59
+    mask: 24
+  - name: BHM-WS-11
+    ip: 10.32.3.60
+    mask: 24
+  - name: BHM-WS-12
+    ip: 10.32.3.61
+    mask: 24
+  - name: BHM-PBX-01
+    ip: 10.32.4.10
+    mask: 24
+  - name: BHM-SBC-01
+    ip: 10.32.4.20
+    mask: 24
+  - name: BHM-VC-01
+    ip: 10.32.4.30
+    mask: 24
+  - name: BHM-NVR-01
+    ip: 10.32.5.10
+    mask: 24
+  - name: BHM-CAM-01
+    ip: 10.32.5.100
+    mask: 24
+  - name: BHM-CAM-02
+    ip: 10.32.5.101
+    mask: 24
+  - name: BHM-CAM-03
+    ip: 10.32.5.102
+    mask: 24
+  - name: BHM-CAM-04
+    ip: 10.32.5.103
+    mask: 24
+  - name: BHM-PLC-01
+    ip: 10.32.10.10
+    mask: 24
+  - name: BHM-PLC-02
+    ip: 10.32.10.11
+    mask: 24
+  - name: BHM-PLC-03
+    ip: 10.32.10.12
+    mask: 24
+  - name: BHM-HMI-01
+    ip: 10.32.10.20
+    mask: 24
+  - name: BHM-HMI-02
+    ip: 10.32.10.21
+    mask: 24
+  - name: BHM-HISTORIAN-01
+    ip: 10.32.11.10
+    mask: 24
+  - name: BHM-SCADA-GW01
+    ip: 10.32.11.20
+    mask: 24
+  - name: BHM-RTU-01
+    ip: 10.32.11.30
+    mask: 24
+  - name: BHM-RTU-02
+    ip: 10.32.11.31
+    mask: 24
+  - name: BHM-DCS-01
+    ip: 10.32.11.40
+    mask: 24
+  - name: BHM-DRIVE-01
+    ip: 10.32.11.50
+    mask: 24
+  - name: BHM-MES-TERM01
+    ip: 10.32.12.10
+    mask: 24
+  - name: BHM-MES-TERM02
+    ip: 10.32.12.11
+    mask: 24
+  - name: BHM-MES-TERM03
+    ip: 10.32.12.12
+    mask: 24
+  - name: BHM-MES-TERM04
+    ip: 10.32.12.13
+    mask: 24
+  - name: BHM-MES-TERM05
+    ip: 10.32.12.14
+    mask: 24
+  - name: BHM-MES-SRV01
+    ip: 10.32.12.50
+    mask: 24
+  - name: BHM-MES-TERM06
+    ip: 10.32.12.15
+    mask: 24
+  - name: BHM-MES-TERM07
+    ip: 10.32.12.16
+    mask: 24
+  - name: BHM-MES-SRV02
+    ip: 10.32.12.51
+    mask: 24
+  - name: BHM-QA-CMM01
+    ip: 10.32.13.10
+    mask: 24
+  - name: BHM-QA-SPEC01
+    ip: 10.32.13.11
+    mask: 24
+  - name: BHM-QA-TENS01
+    ip: 10.32.13.12
+    mask: 24
+  - name: BHM-QA-SRV01
+    ip: 10.32.13.50
+    mask: 24
+  - name: NYC-DC01
+    ip: 10.33.1.10
+    mask: 24
+  - name: NYC-DNS01
+    ip: 10.33.1.11
+    mask: 24
+  - name: NYC-FILE01
+    ip: 10.33.1.20
+    mask: 24
+  - name: NYC-PRINT01
+    ip: 10.33.1.30
+    mask: 24
+  - name: NYC-WSUS-01
+    ip: 10.33.1.40
+    mask: 24
+  - name: NYC-VEEAM-01
+    ip: 10.33.1.50
+    mask: 24
+  - name: NYC-AP-01
+    ip: 10.33.2.10
+    mask: 24
+  - name: NYC-AP-02
+    ip: 10.33.2.11
+    mask: 24
+  - name: NYC-AP-03
+    ip: 10.33.2.12
+    mask: 24
+  - name: NYC-AP-04
+    ip: 10.33.2.13
+    mask: 24
+  - name: NYC-AP-05
+    ip: 10.33.2.14
+    mask: 24
+  - name: NYC-WS-01
+    ip: 10.33.3.50
+    mask: 24
+  - name: NYC-WS-02
+    ip: 10.33.3.51
+    mask: 24
+  - name: NYC-WS-03
+    ip: 10.33.3.52
+    mask: 24
+  - name: NYC-WS-04
+    ip: 10.33.3.53
+    mask: 24
+  - name: NYC-WS-05
+    ip: 10.33.3.54
+    mask: 24
+  - name: NYC-WS-06
+    ip: 10.33.3.55
+    mask: 24
+  - name: NYC-WS-07
+    ip: 10.33.3.56
+    mask: 24
+  - name: NYC-WS-08
+    ip: 10.33.3.57
+    mask: 24
+  - name: NYC-WS-09
+    ip: 10.33.3.58
+    mask: 24
+  - name: NYC-WS-10
+    ip: 10.33.3.59
+    mask: 24
+  - name: NYC-PBX-01
+    ip: 10.33.4.10
+    mask: 24
+  - name: NYC-SBC-01
+    ip: 10.33.4.20
+    mask: 24
+  - name: NYC-VC-01
+    ip: 10.33.4.30
+    mask: 24
+  - name: NYC-MFP-01
+    ip: 10.33.5.10
+    mask: 24
+  - name: NYC-MFP-02
+    ip: 10.33.5.11
+    mask: 24
+  - name: NYC-MFP-03
+    ip: 10.33.5.12
+    mask: 24
+  - name: NYC-MFP-04
+    ip: 10.33.5.13
+    mask: 24
+  - name: LAX-DC01
+    ip: 10.34.1.10
+    mask: 24
+  - name: LAX-DNS01
+    ip: 10.34.1.11
+    mask: 24
+  - name: LAX-FILE01
+    ip: 10.34.1.20
+    mask: 24
+  - name: LAX-PRINT01
+    ip: 10.34.1.30
+    mask: 24
+  - name: LAX-AP-01
+    ip: 10.34.2.10
+    mask: 24
+  - name: LAX-AP-02
+    ip: 10.34.2.11
+    mask: 24
+  - name: LAX-AP-03
+    ip: 10.34.2.12
+    mask: 24
+  - name: LAX-AP-04
+    ip: 10.34.2.13
+    mask: 24
+  - name: LAX-WS-01
+    ip: 10.34.3.50
+    mask: 24
+  - name: LAX-WS-02
+    ip: 10.34.3.51
+    mask: 24
+  - name: LAX-WS-03
+    ip: 10.34.3.52
+    mask: 24
+  - name: LAX-WS-04
+    ip: 10.34.3.53
+    mask: 24
+  - name: LAX-WS-05
+    ip: 10.34.3.54
+    mask: 24
+  - name: LAX-WS-06
+    ip: 10.34.3.55
+    mask: 24
+  - name: LAX-WS-07
+    ip: 10.34.3.56
+    mask: 24
+  - name: LAX-WS-08
+    ip: 10.34.3.57
+    mask: 24
+  - name: LAX-PBX-01
+    ip: 10.34.4.10
+    mask: 24
+  - name: LAX-SBC-01
+    ip: 10.34.4.20
+    mask: 24
+  - name: LAX-VC-01
+    ip: 10.34.4.30
+    mask: 24
+  - name: LAX-MFP-01
+    ip: 10.34.5.10
+    mask: 24
+  - name: LAX-MFP-02
+    ip: 10.34.5.11
+    mask: 24
+  - name: LAX-MFP-03
+    ip: 10.34.5.12
+    mask: 24
+  - name: LAX-MFP-04
+    ip: 10.34.5.13
+    mask: 24
+  - name: ATL-DC01
+    ip: 10.35.1.10
+    mask: 24
+  - name: ATL-DNS01
+    ip: 10.35.1.11
+    mask: 24
+  - name: ATL-FILE01
+    ip: 10.35.1.20
+    mask: 24
+  - name: ATL-PRINT01
+    ip: 10.35.1.30
+    mask: 24
+  - name: ATL-AP-01
+    ip: 10.35.2.10
+    mask: 24
+  - name: ATL-AP-02
+    ip: 10.35.2.11
+    mask: 24
+  - name: ATL-AP-03
+    ip: 10.35.2.12
+    mask: 24
+  - name: ATL-AP-04
+    ip: 10.35.2.13
+    mask: 24
+  - name: ATL-WS-01
+    ip: 10.35.3.50
+    mask: 24
+  - name: ATL-WS-02
+    ip: 10.35.3.51
+    mask: 24
+  - name: ATL-WS-03
+    ip: 10.35.3.52
+    mask: 24
+  - name: ATL-WS-04
+    ip: 10.35.3.53
+    mask: 24
+  - name: ATL-WS-05
+    ip: 10.35.3.54
+    mask: 24
+  - name: ATL-WS-06
+    ip: 10.35.3.55
+    mask: 24
+  - name: ATL-WS-07
+    ip: 10.35.3.56
+    mask: 24
+  - name: ATL-WS-08
+    ip: 10.35.3.57
+    mask: 24
+  - name: ATL-PBX-01
+    ip: 10.35.4.10
+    mask: 24
+  - name: ATL-SBC-01
+    ip: 10.35.4.20
+    mask: 24
+  - name: ATL-VC-01
+    ip: 10.35.4.30
+    mask: 24
+  - name: ATL-PHONE-GW01
+    ip: 10.35.4.40
+    mask: 24
+  - name: ATL-MFP-01
+    ip: 10.35.5.10
+    mask: 24
+  - name: ATL-MFP-02
+    ip: 10.35.5.11
+    mask: 24
+  - name: ATL-MFP-03
+    ip: 10.35.5.12
+    mask: 24
+  - name: ATL-MFP-04
+    ip: 10.35.5.13
+    mask: 24
+  - name: ATL-BADGE-01
+    ip: 10.35.5.20
+    mask: 24
+  - name: MEM-DC01
+    ip: 10.36.1.10
+    mask: 24
+  - name: MEM-DNS01
+    ip: 10.36.1.11
+    mask: 24
+  - name: MEM-WMS-01
+    ip: 10.36.1.20
+    mask: 24
+  - name: MEM-WMS-02
+    ip: 10.36.1.21
+    mask: 24
+  - name: MEM-FILE01
+    ip: 10.36.1.30
+    mask: 24
+  - name: MEM-VEEAM-01
+    ip: 10.36.1.50
+    mask: 24
+  - name: MEM-DHCP01
+    ip: 10.36.1.51
+    mask: 24
+  - name: MEM-WLC-01
+    ip: 10.36.2.1
+    mask: 24
+  - name: MEM-AP-01
+    ip: 10.36.2.10
+    mask: 24
+  - name: MEM-AP-02
+    ip: 10.36.2.11
+    mask: 24
+  - name: MEM-AP-03
+    ip: 10.36.2.12
+    mask: 24
+  - name: MEM-AP-04
+    ip: 10.36.2.13
+    mask: 24
+  - name: MEM-AP-05
+    ip: 10.36.2.14
+    mask: 24
+  - name: MEM-WS-01
+    ip: 10.36.3.50
+    mask: 24
+  - name: MEM-WS-02
+    ip: 10.36.3.51
+    mask: 24
+  - name: MEM-WS-03
+    ip: 10.36.3.52
+    mask: 24
+  - name: MEM-WS-04
+    ip: 10.36.3.53
+    mask: 24
+  - name: MEM-WS-05
+    ip: 10.36.3.54
+    mask: 24
+  - name: MEM-WS-06
+    ip: 10.36.3.55
+    mask: 24
+  - name: MEM-PBX-01
+    ip: 10.36.4.10
+    mask: 24
+  - name: MEM-SBC-01
+    ip: 10.36.4.20
+    mask: 24
+  - name: MEM-VC-01
+    ip: 10.36.4.30
+    mask: 24
+  - name: MEM-SCANNER-01
+    ip: 10.36.5.10
+    mask: 24
+  - name: MEM-SCANNER-02
+    ip: 10.36.5.11
+    mask: 24
+  - name: MEM-SCANNER-03
+    ip: 10.36.5.12
+    mask: 24
+  - name: MEM-PICKTERM-01
+    ip: 10.36.5.20
+    mask: 24
+  - name: MEM-PICKTERM-02
+    ip: 10.36.5.21
+    mask: 24
+  - name: MEM-PICKTERM-03
+    ip: 10.36.5.22
+    mask: 24
+  - name: MEM-LABEL-01
+    ip: 10.36.5.30
+    mask: 24
+  - name: MEM-LABEL-02
+    ip: 10.36.5.31
+    mask: 24
+  - name: MEM-SCALE-01
+    ip: 10.36.5.40
+    mask: 24
+  - name: MEM-CONVEYOR-01
+    ip: 10.36.5.50
+    mask: 24
+  - name: MEM-NVR-01
+    ip: 10.36.6.10
+    mask: 24
+  - name: MEM-CAM-01
+    ip: 10.36.6.100
+    mask: 24
+  - name: MEM-CAM-02
+    ip: 10.36.6.101
+    mask: 24
+  - name: MEM-CAM-03
+    ip: 10.36.6.102
+    mask: 24
+  - name: MEM-CAM-04
+    ip: 10.36.6.103
+    mask: 24
+  - name: LOU-DC01
+    ip: 10.37.1.10
+    mask: 24
+  - name: LOU-DNS01
+    ip: 10.37.1.11
+    mask: 24
+  - name: LOU-WMS-01
+    ip: 10.37.1.20
+    mask: 24
+  - name: LOU-WMS-02
+    ip: 10.37.1.21
+    mask: 24
+  - name: LOU-FILE01
+    ip: 10.37.1.30
+    mask: 24
+  - name: LOU-WLC-01
+    ip: 10.37.2.1
+    mask: 24
+  - name: LOU-AP-01
+    ip: 10.37.2.10
+    mask: 24
+  - name: LOU-AP-02
+    ip: 10.37.2.11
+    mask: 24
+  - name: LOU-AP-03
+    ip: 10.37.2.12
+    mask: 24
+  - name: LOU-AP-04
+    ip: 10.37.2.13
+    mask: 24
+  - name: LOU-WS-01
+    ip: 10.37.3.50
+    mask: 24
+  - name: LOU-WS-02
+    ip: 10.37.3.51
+    mask: 24
+  - name: LOU-WS-03
+    ip: 10.37.3.52
+    mask: 24
+  - name: LOU-WS-04
+    ip: 10.37.3.53
+    mask: 24
+  - name: LOU-WS-05
+    ip: 10.37.3.54
+    mask: 24
+  - name: LOU-WS-06
+    ip: 10.37.3.55
+    mask: 24
+  - name: LOU-WS-07
+    ip: 10.37.3.56
+    mask: 24
+  - name: LOU-WS-08
+    ip: 10.37.3.57
+    mask: 24
+  - name: LOU-PBX-01
+    ip: 10.37.4.10
+    mask: 24
+  - name: LOU-SBC-01
+    ip: 10.37.4.20
+    mask: 24
+  - name: LOU-VC-01
+    ip: 10.37.4.30
+    mask: 24
+  - name: LOU-SCANNER-01
+    ip: 10.37.5.10
+    mask: 24
+  - name: LOU-SCANNER-02
+    ip: 10.37.5.11
+    mask: 24
+  - name: LOU-PICKTERM-01
+    ip: 10.37.5.20
+    mask: 24
+  - name: LOU-PICKTERM-02
+    ip: 10.37.5.21
+    mask: 24
+  - name: LOU-PICKTERM-03
+    ip: 10.37.5.22
+    mask: 24
+  - name: LOU-LABEL-01
+    ip: 10.37.5.30
+    mask: 24
+  - name: LOU-LABEL-02
+    ip: 10.37.5.31
+    mask: 24
+  - name: LOU-SCALE-01
+    ip: 10.37.5.40
+    mask: 24
+  - name: LOU-CONVEYOR-01
+    ip: 10.37.5.50
+    mask: 24
+  - name: LOU-NVR-01
+    ip: 10.37.6.10
+    mask: 24
+  - name: LOU-CAM-01
+    ip: 10.37.6.100
+    mask: 24
+  - name: LOU-CAM-02
+    ip: 10.37.6.101
+    mask: 24
+  - name: LOU-CAM-03
+    ip: 10.37.6.102
+    mask: 24
+  - name: LOU-CAM-04
+    ip: 10.37.6.103
+    mask: 24
+  - name: AUS-DC01
+    ip: 10.38.1.10
+    mask: 24
+  - name: AUS-DNS01
+    ip: 10.38.1.11
+    mask: 24
+  - name: AUS-COMPUTE01
+    ip: 10.38.1.20
+    mask: 24
+  - name: AUS-COMPUTE02
+    ip: 10.38.1.21
+    mask: 24
+  - name: AUS-COMPUTE03
+    ip: 10.38.1.22
+    mask: 24
+  - name: AUS-FILE01
+    ip: 10.38.1.30
+    mask: 24
+  - name: AUS-AP-01
+    ip: 10.38.2.10
+    mask: 24
+  - name: AUS-AP-02
+    ip: 10.38.2.11
+    mask: 24
+  - name: AUS-AP-03
+    ip: 10.38.2.12
+    mask: 24
+  - name: AUS-AP-04
+    ip: 10.38.2.13
+    mask: 24
+  - name: AUS-CAD-01
+    ip: 10.38.3.50
+    mask: 24
+  - name: AUS-CAD-02
+    ip: 10.38.3.51
+    mask: 24
+  - name: AUS-CAD-03
+    ip: 10.38.3.52
+    mask: 24
+  - name: AUS-CAD-04
+    ip: 10.38.3.53
+    mask: 24
+  - name: AUS-CAD-05
+    ip: 10.38.3.54
+    mask: 24
+  - name: AUS-SIM-01
+    ip: 10.38.3.60
+    mask: 24
+  - name: AUS-SIM-02
+    ip: 10.38.3.61
+    mask: 24
+  - name: AUS-SIM-03
+    ip: 10.38.3.62
+    mask: 24
+  - name: AUS-WS-01
+    ip: 10.38.3.70
+    mask: 24
+  - name: AUS-WS-02
+    ip: 10.38.3.71
+    mask: 24
+  - name: AUS-PBX-01
+    ip: 10.38.4.10
+    mask: 24
+  - name: AUS-SBC-01
+    ip: 10.38.4.20
+    mask: 24
+  - name: AUS-VC-01
+    ip: 10.38.4.30
+    mask: 24
+  - name: AUS-METAL-01
+    ip: 10.38.10.10
+    mask: 24
+  - name: AUS-METAL-02
+    ip: 10.38.10.11
+    mask: 24
+  - name: AUS-STRESS-01
+    ip: 10.38.10.20
+    mask: 24
+  - name: AUS-STRESS-02
+    ip: 10.38.10.21
+    mask: 24
+  - name: AUS-XRAY-01
+    ip: 10.38.10.30
+    mask: 24
+  - name: AUS-LAB-SRV01
+    ip: 10.38.10.50
+    mask: 24
+  - name: AUS-3DPRINT-01
+    ip: 10.38.11.10
+    mask: 24
+  - name: AUS-3DPRINT-02
+    ip: 10.38.11.11
+    mask: 24
+  - name: AUS-CNC-01
+    ip: 10.38.11.20
+    mask: 24
+  - name: AUS-CNC-02
+    ip: 10.38.11.21
+    mask: 24
+  - name: AUS-3DPRINT-03
+    ip: 10.38.11.12
+    mask: 24
+  - name: AUS-LASER-01
+    ip: 10.38.11.30
+    mask: 24
+  - name: AUS-DEV-VM01
+    ip: 10.38.12.10
+    mask: 24
+  - name: AUS-DEV-VM02
+    ip: 10.38.12.11
+    mask: 24
+  - name: AUS-DEV-VM03
+    ip: 10.38.12.12
+    mask: 24
+  - name: AUS-DEV-VM04
+    ip: 10.38.12.13
+    mask: 24
+  - name: AUS-DEV-VM05
+    ip: 10.38.12.14
+    mask: 24
+  - name: AUS-DEV-VM06
+    ip: 10.38.12.15
+    mask: 24
+  - name: PHX-DC01
+    ip: 10.39.1.10
+    mask: 24
+  - name: PHX-DNS01
+    ip: 10.39.1.11
+    mask: 24
+  - name: PHX-CALLREC-01
+    ip: 10.39.1.20
+    mask: 24
+  - name: PHX-FILE01
+    ip: 10.39.1.30
+    mask: 24
+  - name: PHX-AP-01
+    ip: 10.39.2.10
+    mask: 24
+  - name: PHX-AP-02
+    ip: 10.39.2.11
+    mask: 24
+  - name: PHX-AP-03
+    ip: 10.39.2.12
+    mask: 24
+  - name: PHX-AP-04
+    ip: 10.39.2.13
+    mask: 24
+  - name: PHX-WS-01
+    ip: 10.39.3.50
+    mask: 24
+  - name: PHX-WS-02
+    ip: 10.39.3.51
+    mask: 24
+  - name: PHX-WS-03
+    ip: 10.39.3.52
+    mask: 24
+  - name: PHX-WS-04
+    ip: 10.39.3.53
+    mask: 24
+  - name: PHX-WS-05
+    ip: 10.39.3.54
+    mask: 24
+  - name: PHX-WS-06
+    ip: 10.39.3.55
+    mask: 24
+  - name: PHX-WS-07
+    ip: 10.39.3.56
+    mask: 24
+  - name: PHX-WS-08
+    ip: 10.39.3.57
+    mask: 24
+  - name: PHX-WS-09
+    ip: 10.39.3.58
+    mask: 24
+  - name: PHX-WS-10
+    ip: 10.39.3.59
+    mask: 24
+  - name: PHX-WS-11
+    ip: 10.39.3.60
+    mask: 24
+  - name: PHX-WS-12
+    ip: 10.39.3.61
+    mask: 24
+  - name: PHX-PBX-01
+    ip: 10.39.4.10
+    mask: 24
+  - name: PHX-PBX-02
+    ip: 10.39.4.11
+    mask: 24
+  - name: PHX-IVR-01
+    ip: 10.39.4.20
+    mask: 24
+  - name: PHX-ACD-01
+    ip: 10.39.4.30
+    mask: 24
+  - name: PHX-SBC-01
+    ip: 10.39.4.40
+    mask: 24
+  - name: PHX-SBC-02
+    ip: 10.39.4.41
+    mask: 24
+  - name: PHX-MFP-01
+    ip: 10.39.5.10
+    mask: 24
+  - name: PHX-MFP-02
+    ip: 10.39.5.11
+    mask: 24
+  - name: PHX-MFP-03
+    ip: 10.39.5.12
+    mask: 24
+
+flows:
+  # ════════════════════════════════════════════════════════════════
+  # 3-TIER WEB APPLICATION (DMZ → IIS → DotNet → MSSQL/Redis)
+  # ════════════════════════════════════════════════════════════════
+  # DMZ Web → IIS (HTTPS inbound)
+  - name: dmz-web01-to-iis01-https
+    source: DAL-WEB-01
+    source_port: 42001
+    destination: DAL-IIS-01
+    destination_port: 443
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dmz-web02-to-iis02-https
+    source: DAL-WEB-02
+    source_port: 42002
+    destination: DAL-IIS-02
+    destination_port: 443
+    protocol: TCP
+    rate: 110Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dmz-web03-to-iis03-https
+    source: DAL-WEB-03
+    source_port: 42003
+    destination: DAL-IIS-03
+    destination_port: 80
+    protocol: TCP
+    rate: 443Mbps
+    enabled: true
+    active_timeout: 5s
+  # IIS → DotNet App Tier
+  - name: iis01-to-dotnet01-http
+    source: DAL-IIS-01
+    source_port: 50001
+    destination: DAL-APP-NET01
+    destination_port: 8080
+    protocol: TCP
+    rate: 483Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: iis02-to-dotnet02-http
+    source: DAL-IIS-02
+    source_port: 50002
+    destination: DAL-APP-NET02
+    destination_port: 8080
+    protocol: TCP
+    rate: 463Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: iis03-to-dotnet03-http
+    source: DAL-IIS-03
+    source_port: 50003
+    destination: DAL-APP-NET03
+    destination_port: 8080
+    protocol: TCP
+    rate: 403Mbps
+    enabled: true
+    active_timeout: 5s
+  # DotNet → MSSQL
+  - name: dotnet01-to-sql01-mssql
+    source: DAL-APP-NET01
+    source_port: 51001
+    destination: DAL-SQL-01
+    destination_port: 1433
+    protocol: TCP
+    rate: 200Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dotnet02-to-sql02-mssql
+    source: DAL-APP-NET02
+    source_port: 51002
+    destination: DAL-SQL-02
+    destination_port: 1433
+    protocol: TCP
+    rate: 180Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dotnet03-to-sql03-mssql
+    source: DAL-APP-NET03
+    source_port: 51003
+    destination: DAL-SQL-03
+    destination_port: 1433
+    protocol: TCP
+    rate: 150Mbps
+    enabled: true
+    active_timeout: 5s
+  # DotNet → Redis (caching — high freq, smaller payloads)
+  - name: dotnet01-to-redis01-cache
+    source: DAL-APP-NET01
+    source_port: 52001
+    destination: DAL-REDIS-01
+    destination_port: 6379
+    protocol: TCP
+    rate: 342Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dotnet02-to-redis02-cache
+    source: DAL-APP-NET02
+    source_port: 52002
+    destination: DAL-REDIS-02
+    destination_port: 6379
+    protocol: TCP
+    rate: 322Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # SAP ERP + HANA
+  # ════════════════════════════════════════════════════════════════
+  - name: sap-app01-to-hana01
+    source: DAL-SAP-APP01
+    source_port: 40001
+    destination: DAL-SAP-HANA01
+    destination_port: 30015
+    protocol: TCP
+    rate: 300Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-app02-to-hana02
+    source: DAL-SAP-APP02
+    source_port: 40002
+    destination: DAL-SAP-HANA02
+    destination_port: 30015
+    protocol: TCP
+    rate: 280Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-app03-to-hana03
+    source: DAL-SAP-APP03
+    source_port: 40003
+    destination: DAL-SAP-HANA03
+    destination_port: 30015
+    protocol: TCP
+    rate: 250Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-app04-to-hana04
+    source: DAL-SAP-APP04
+    source_port: 40004
+    destination: DAL-SAP-HANA04
+    destination_port: 30015
+    protocol: TCP
+    rate: 220Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-app05-to-hana05
+    source: DAL-SAP-APP05
+    source_port: 40005
+    destination: DAL-SAP-HANA05
+    destination_port: 30015
+    protocol: TCP
+    rate: 180Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-ci01-to-hana01-rfc
+    source: DAL-SAP-CI01
+    source_port: 40010
+    destination: DAL-SAP-HANA01
+    destination_port: 30015
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-gw01-to-app01-rfc
+    source: DAL-SAP-GW01
+    source_port: 40020
+    destination: DAL-SAP-APP01
+    destination_port: 3200
+    protocol: TCP
+    rate: 423Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: sap-wd01-to-app02-http
+    source: DAL-SAP-WD01
+    source_port: 40030
+    destination: DAL-SAP-APP02
+    destination_port: 8000
+    protocol: TCP
+    rate: 100Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # MES TO ERP
+  # ════════════════════════════════════════════════════════════════
+  - name: mes-app01-to-sap-app01
+    source: DAL-MES-APP01
+    source_port: 43001
+    destination: DAL-SAP-APP01
+    destination_port: 8000
+    protocol: TCP
+    rate: 342Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: mes-app02-to-sap-app02
+    source: DAL-MES-APP02
+    source_port: 43002
+    destination: DAL-SAP-APP02
+    destination_port: 8000
+    protocol: TCP
+    rate: 322Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: mes-app01-to-mes-db01
+    source: DAL-MES-APP01
+    source_port: 43010
+    destination: DAL-MES-DB01
+    destination_port: 1433
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: mes-app02-to-mes-db02
+    source: DAL-MES-APP02
+    source_port: 43011
+    destination: DAL-MES-DB02
+    destination_port: 1433
+    protocol: TCP
+    rate: 110Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # DR REPLICATION (Dallas → Chicago)
+  # ════════════════════════════════════════════════════════════════
+  # MSSQL AG replication
+  - name: dal-sql01-to-chi-sql01-dr
+    source: DAL-SQL-01
+    source_port: 55001
+    destination: CHI-SQL-01
+    destination_port: 1433
+    protocol: TCP
+    rate: 400Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-sql02-to-chi-sql02-dr
+    source: DAL-SQL-02
+    source_port: 55002
+    destination: CHI-SQL-02
+    destination_port: 1433
+    protocol: TCP
+    rate: 350Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-sql-ag01-to-chi-sql03-dr
+    source: DAL-SQL-AG01
+    source_port: 55003
+    destination: CHI-SQL-03
+    destination_port: 1433
+    protocol: TCP
+    rate: 250Mbps
+    enabled: true
+    active_timeout: 5s
+  # HANA System Replication
+  - name: dal-hana01-to-chi-hana01-dr
+    source: DAL-SAP-HANA01
+    source_port: 56001
+    destination: CHI-SAP-HANA01
+    destination_port: 30015
+    protocol: TCP
+    rate: 800Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-hana02-to-chi-hana02-dr
+    source: DAL-SAP-HANA02
+    source_port: 56002
+    destination: CHI-SAP-HANA02
+    destination_port: 30015
+    protocol: TCP
+    rate: 700Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-hana03-to-chi-hana03-dr
+    source: DAL-SAP-HANA03
+    source_port: 56003
+    destination: CHI-SAP-HANA03
+    destination_port: 30015
+    protocol: TCP
+    rate: 500Mbps
+    enabled: true
+    active_timeout: 5s
+  # Exchange DAG replication
+  - name: dal-exch-mb01-to-chi-exch-mb01-dr
+    source: DAL-EXCH-MB01
+    source_port: 56010
+    destination: CHI-EXCH-MB01
+    destination_port: 443
+    protocol: TCP
+    rate: 150Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-exch-mb02-to-chi-exch-mb02-dr
+    source: DAL-EXCH-MB02
+    source_port: 56011
+    destination: CHI-EXCH-MB02
+    destination_port: 443
+    protocol: TCP
+    rate: 150Mbps
+    enabled: true
+    active_timeout: 5s
+  # Oracle Data Guard replication
+  - name: dal-ora01-to-chi-ora01-dr
+    source: DAL-ORA-01
+    source_port: 56020
+    destination: CHI-ORA-01
+    destination_port: 1521
+    protocol: TCP
+    rate: 300Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # BRANCH → HQ (VPN, DNS, Email)
+  # ════════════════════════════════════════════════════════════════
+  # Pittsburgh Plant → Dallas
+  - name: pit-to-dal-vpn
+    source: PIT-DC01
+    source_port: 44001
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 150Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pit-to-dal-dns
+    source: PIT-DNS01
+    source_port: 44002
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pit-mes-to-dal-erp
+    source: PIT-MES-SRV01
+    source_port: 44003
+    destination: DAL-SAP-APP01
+    destination_port: 8000
+    protocol: TCP
+    rate: 281Mbps
+    enabled: true
+    active_timeout: 5s
+  # Detroit Plant → Dallas
+  - name: det-to-dal-vpn
+    source: DET-DC01
+    source_port: 44010
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 130Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: det-to-dal-dns
+    source: DET-DNS01
+    source_port: 44011
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 128Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: det-mes-to-dal-erp
+    source: DET-MES-SRV01
+    source_port: 44012
+    destination: DAL-SAP-APP02
+    destination_port: 8000
+    protocol: TCP
+    rate: 261Mbps
+    enabled: true
+    active_timeout: 5s
+  # Birmingham Plant → Dallas
+  - name: bhm-to-dal-vpn
+    source: BHM-DC01
+    source_port: 44020
+    destination: DAL-VPN-02
+    destination_port: 443
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: bhm-to-dal-dns
+    source: BHM-DNS01
+    source_port: 44021
+    destination: DAL-DNS02
+    destination_port: 53
+    protocol: UDP
+    rate: 128Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: bhm-mes-to-dal-erp
+    source: BHM-MES-SRV01
+    source_port: 44022
+    destination: DAL-SAP-APP03
+    destination_port: 8000
+    protocol: TCP
+    rate: 261Mbps
+    enabled: true
+    active_timeout: 5s
+  # New York Office → Dallas
+  - name: nyc-to-dal-vpn
+    source: NYC-DC01
+    source_port: 44030
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 423Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: nyc-to-dal-dns
+    source: NYC-DNS01
+    source_port: 44031
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: nyc-to-dal-email
+    source: NYC-DC01
+    source_port: 44032
+    destination: DAL-EXCH-CAS01
+    destination_port: 443
+    protocol: TCP
+    rate: 302Mbps
+    enabled: true
+    active_timeout: 5s
+  # Los Angeles Office → Dallas
+  - name: lax-to-dal-vpn
+    source: LAX-DC01
+    source_port: 44040
+    destination: DAL-VPN-02
+    destination_port: 443
+    protocol: TCP
+    rate: 403Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: lax-to-dal-dns
+    source: LAX-DNS01
+    source_port: 44041
+    destination: DAL-DNS02
+    destination_port: 53
+    protocol: UDP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  # Atlanta Office → Dallas
+  - name: atl-to-dal-vpn
+    source: ATL-DC01
+    source_port: 44050
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 382Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: atl-to-dal-dns
+    source: ATL-DNS01
+    source_port: 44051
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  # Memphis Warehouse → Dallas
+  - name: mem-to-dal-vpn
+    source: MEM-DC01
+    source_port: 44060
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 100Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: mem-to-dal-dns
+    source: MEM-DNS01
+    source_port: 44061
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 124Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: mem-wms-to-dal-erp
+    source: MEM-WMS-01
+    source_port: 44062
+    destination: DAL-SAP-APP04
+    destination_port: 8000
+    protocol: TCP
+    rate: 362Mbps
+    enabled: true
+    active_timeout: 5s
+  # Louisville Warehouse → Dallas
+  - name: lou-to-dal-vpn
+    source: LOU-DC01
+    source_port: 44070
+    destination: DAL-VPN-02
+    destination_port: 443
+    protocol: TCP
+    rate: 483Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: lou-to-dal-dns
+    source: LOU-DNS01
+    source_port: 44071
+    destination: DAL-DNS02
+    destination_port: 53
+    protocol: UDP
+    rate: 124Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: lou-wms-to-dal-erp
+    source: LOU-WMS-01
+    source_port: 44072
+    destination: DAL-SAP-APP05
+    destination_port: 8000
+    protocol: TCP
+    rate: 342Mbps
+    enabled: true
+    active_timeout: 5s
+  # Austin R&D → Dallas
+  - name: aus-to-dal-vpn
+    source: AUS-DC01
+    source_port: 44080
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 200Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: aus-to-dal-dns
+    source: AUS-DNS01
+    source_port: 44081
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 128Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: aus-dev-to-dal-gitlab
+    source: AUS-DEV-VM01
+    source_port: 44082
+    destination: DAL-GITLAB-01
+    destination_port: 443
+    protocol: TCP
+    rate: 423Mbps
+    enabled: true
+    active_timeout: 5s
+  # Phoenix Call Center → Dallas
+  - name: phx-to-dal-vpn
+    source: PHX-DC01
+    source_port: 44090
+    destination: DAL-VPN-02
+    destination_port: 443
+    protocol: TCP
+    rate: 110Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: phx-to-dal-dns
+    source: PHX-DNS01
+    source_port: 44091
+    destination: DAL-DNS02
+    destination_port: 53
+    protocol: UDP
+    rate: 124Mbps
+    enabled: true
+    active_timeout: 5s
+  # Chicago DR → Dallas (management)
+  - name: chi-to-dal-vpn
+    source: CHI-DC01
+    source_port: 44100
+    destination: DAL-VPN-01
+    destination_port: 443
+    protocol: TCP
+    rate: 250Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: chi-to-dal-dns
+    source: CHI-DNS01
+    source_port: 44101
+    destination: DAL-DNS01
+    destination_port: 53
+    protocol: UDP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # FACTORY SCADA (isolated within each plant)
+  # ════════════════════════════════════════════════════════════════
+  # Pittsburgh SCADA
+  - name: pit-plc01-to-hmi01-modbus
+    source: PIT-PLC-01
+    source_port: 49001
+    destination: PIT-HMI-01
+    destination_port: 502
+    protocol: TCP
+    rate: 148Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pit-plc02-to-hmi02-modbus
+    source: PIT-PLC-02
+    source_port: 49002
+    destination: PIT-HMI-02
+    destination_port: 502
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pit-plc03-to-historian-opcua
+    source: PIT-PLC-03
+    source_port: 49003
+    destination: PIT-HISTORIAN-01
+    destination_port: 4840
+    protocol: TCP
+    rate: 172Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pit-hmi01-to-historian-data
+    source: PIT-HMI-01
+    source_port: 49010
+    destination: PIT-HISTORIAN-01
+    destination_port: 1433
+    protocol: TCP
+    rate: 201Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pit-scadagw-to-historian
+    source: PIT-SCADA-GW01
+    source_port: 49020
+    destination: PIT-HISTORIAN-01
+    destination_port: 4840
+    protocol: TCP
+    rate: 160Mbps
+    enabled: true
+    active_timeout: 5s
+  # Detroit SCADA
+  - name: det-plc01-to-hmi01-modbus
+    source: DET-PLC-01
+    source_port: 49101
+    destination: DET-HMI-01
+    destination_port: 502
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: det-plc02-to-hmi02-modbus
+    source: DET-PLC-02
+    source_port: 49102
+    destination: DET-HMI-02
+    destination_port: 502
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: det-plc03-to-historian-opcua
+    source: DET-PLC-03
+    source_port: 49103
+    destination: DET-HISTORIAN-01
+    destination_port: 4840
+    protocol: TCP
+    rate: 160Mbps
+    enabled: true
+    active_timeout: 5s
+  # Birmingham SCADA
+  - name: bhm-plc01-to-hmi01-modbus
+    source: BHM-PLC-01
+    source_port: 49201
+    destination: BHM-HMI-01
+    destination_port: 502
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: bhm-plc02-to-hmi02-modbus
+    source: BHM-PLC-02
+    source_port: 49202
+    destination: BHM-HMI-02
+    destination_port: 502
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: bhm-plc03-to-historian-opcua
+    source: BHM-PLC-03
+    source_port: 49203
+    destination: BHM-HISTORIAN-01
+    destination_port: 4840
+    protocol: TCP
+    rate: 160Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # BACKUP (Veeam — heavy overnight, always-on dedupe)
+  # ════════════════════════════════════════════════════════════════
+  - name: veeam01-to-sql01-backup
+    source: DAL-VEEAM-01
+    source_port: 46001
+    destination: DAL-SQL-01
+    destination_port: 445
+    protocol: TCP
+    rate: 800Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: veeam01-to-sql02-backup
+    source: DAL-VEEAM-01
+    source_port: 46002
+    destination: DAL-SQL-02
+    destination_port: 445
+    protocol: TCP
+    rate: 750Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: veeam02-to-exch-mb01-backup
+    source: DAL-VEEAM-02
+    source_port: 46010
+    destination: DAL-EXCH-MB01
+    destination_port: 445
+    protocol: TCP
+    rate: 600Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: veeam02-to-sp-wfe01-backup
+    source: DAL-VEEAM-02
+    source_port: 46011
+    destination: DAL-SP-WFE01
+    destination_port: 445
+    protocol: TCP
+    rate: 500Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: veeam01-to-hana01-backup
+    source: DAL-VEEAM-01
+    source_port: 46020
+    destination: DAL-SAP-HANA01
+    destination_port: 10000
+    protocol: TCP
+    rate: 1Gbps
+    enabled: true
+    active_timeout: 5s
+  - name: chi-veeam01-to-chi-sql01-backup
+    source: CHI-VEEAM-01
+    source_port: 46030
+    destination: CHI-SQL-01
+    destination_port: 445
+    protocol: TCP
+    rate: 600Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # MANAGEMENT (JumpBox → servers)
+  # ════════════════════════════════════════════════════════════════
+  - name: jump01-to-dc01-rdp
+    source: DAL-JUMP-01
+    source_port: 47001
+    destination: DAL-DC01
+    destination_port: 3389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: jump01-to-sql01-rdp
+    source: DAL-JUMP-01
+    source_port: 47002
+    destination: DAL-SQL-01
+    destination_port: 3389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: jump02-to-sap-app01-rdp
+    source: DAL-JUMP-02
+    source_port: 47010
+    destination: DAL-SAP-APP01
+    destination_port: 3389
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: jump03-to-k8s-ctrl01-ssh
+    source: DAL-JUMP-03
+    source_port: 47020
+    destination: DAL-K8S-CTRL01
+    destination_port: 22
+    protocol: TCP
+    rate: 124Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: jump03-to-gitlab-ssh
+    source: DAL-JUMP-03
+    source_port: 47021
+    destination: DAL-GITLAB-01
+    destination_port: 22
+    protocol: TCP
+    rate: 124Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: jump01-to-iis01-rdp
+    source: DAL-JUMP-01
+    source_port: 47030
+    destination: DAL-IIS-01
+    destination_port: 3389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # AD REPLICATION (Domain Controllers across sites)
+  # ════════════════════════════════════════════════════════════════
+  - name: dal-dc01-to-chi-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48001
+    destination: CHI-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 180Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc02-to-chi-dc02-ad-repl
+    source: DAL-DC02
+    source_port: 48002
+    destination: CHI-DC02
+    destination_port: 389
+    protocol: TCP
+    rate: 172Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc01-to-pit-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48003
+    destination: PIT-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 148Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc01-to-det-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48004
+    destination: DET-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 148Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc02-to-bhm-dc01-ad-repl
+    source: DAL-DC02
+    source_port: 48005
+    destination: BHM-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 148Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc01-to-nyc-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48006
+    destination: NYC-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc02-to-lax-dc01-ad-repl
+    source: DAL-DC02
+    source_port: 48007
+    destination: LAX-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc01-to-atl-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48008
+    destination: ATL-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc02-to-mem-dc01-ad-repl
+    source: DAL-DC02
+    source_port: 48009
+    destination: MEM-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc01-to-lou-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48010
+    destination: LOU-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc02-to-aus-dc01-ad-repl
+    source: DAL-DC02
+    source_port: 48011
+    destination: AUS-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 140Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-dc01-to-phx-dc01-ad-repl
+    source: DAL-DC01
+    source_port: 48012
+    destination: PHX-DC01
+    destination_port: 389
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # MONITORING (Zabbix/Grafana → agents, syslog, SIEM)
+  # ════════════════════════════════════════════════════════════════
+  - name: zabbix01-to-dal-dc01-agent
+    source: DAL-ZABBIX-01
+    source_port: 57001
+    destination: DAL-DC01
+    destination_port: 10050
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: zabbix01-to-dal-sql01-agent
+    source: DAL-ZABBIX-01
+    source_port: 57002
+    destination: DAL-SQL-01
+    destination_port: 10050
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: zabbix01-to-dal-iis01-agent
+    source: DAL-ZABBIX-01
+    source_port: 57003
+    destination: DAL-IIS-01
+    destination_port: 10050
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: zabbix02-to-dal-sap-app01-agent
+    source: DAL-ZABBIX-02
+    source_port: 57010
+    destination: DAL-SAP-APP01
+    destination_port: 10050
+    protocol: TCP
+    rate: 124Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: zabbix02-to-dal-hana01-agent
+    source: DAL-ZABBIX-02
+    source_port: 57011
+    destination: DAL-SAP-HANA01
+    destination_port: 10050
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: chi-zabbix-to-chi-sql01-agent
+    source: CHI-ZABBIX-01
+    source_port: 57020
+    destination: CHI-SQL-01
+    destination_port: 10050
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: chi-zabbix-to-chi-hana01-agent
+    source: CHI-ZABBIX-01
+    source_port: 57021
+    destination: CHI-SAP-HANA01
+    destination_port: 10050
+    protocol: TCP
+    rate: 132Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-servers-to-syslog-udp
+    source: DAL-DC01
+    source_port: 57030
+    destination: DAL-SYSLOG-01
+    destination_port: 514
+    protocol: UDP
+    rate: 180Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-splunk-fwd-to-idx
+    source: DAL-SYSLOG-01
+    source_port: 57040
+    destination: DAL-SPLUNK-IDX01
+    destination_port: 9997
+    protocol: TCP
+    rate: 261Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # EMAIL FLOW
+  # ════════════════════════════════════════════════════════════════
+  - name: mailgw01-to-exch-hub01-smtp
+    source: DAL-MAILGW-01
+    source_port: 58001
+    destination: DAL-EXCH-HUB01
+    destination_port: 25
+    protocol: TCP
+    rate: 241Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: mailgw02-to-exch-hub02-smtp
+    source: DAL-MAILGW-02
+    source_port: 58002
+    destination: DAL-EXCH-HUB02
+    destination_port: 25
+    protocol: TCP
+    rate: 221Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: exch-hub01-to-exch-mb01-delivery
+    source: DAL-EXCH-HUB01
+    source_port: 58010
+    destination: DAL-EXCH-MB01
+    destination_port: 25
+    protocol: TCP
+    rate: 302Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: exch-hub02-to-exch-mb02-delivery
+    source: DAL-EXCH-HUB02
+    source_port: 58011
+    destination: DAL-EXCH-MB02
+    destination_port: 25
+    protocol: TCP
+    rate: 281Mbps
+    enabled: true
+    active_timeout: 5s
+
+  # ════════════════════════════════════════════════════════════════
+  # CROSS-SITE TRAFFIC
+  # ════════════════════════════════════════════════════════════════
+  # SharePoint access from branches
+  - name: nyc-to-dal-sharepoint
+    source: NYC-DC01
+    source_port: 59001
+    destination: DAL-SP-WFE01
+    destination_port: 443
+    protocol: TCP
+    rate: 241Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: lax-to-dal-sharepoint
+    source: LAX-DC01
+    source_port: 59002
+    destination: DAL-SP-WFE02
+    destination_port: 443
+    protocol: TCP
+    rate: 221Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: atl-to-dal-sharepoint
+    source: ATL-DC01
+    source_port: 59003
+    destination: DAL-SP-WFE01
+    destination_port: 443
+    protocol: TCP
+    rate: 221Mbps
+    enabled: true
+    active_timeout: 5s
+  # Portal access
+  - name: dal-portal-to-sql
+    source: DAL-PORTAL-API01
+    source_port: 59010
+    destination: DAL-PORTAL-DB01
+    destination_port: 5432
+    protocol: TCP
+    rate: 423Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: dal-web04-to-portal-web
+    source: DAL-WEB-04
+    source_port: 59011
+    destination: DAL-PORTAL-WEB01
+    destination_port: 443
+    protocol: TCP
+    rate: 382Mbps
+    enabled: true
+    active_timeout: 5s
+  # Finance/BI queries
+  - name: fin-gl01-to-sql-dw01-bi
+    source: DAL-FIN-GL01
+    source_port: 59020
+    destination: DAL-SQL-DW01
+    destination_port: 1433
+    protocol: TCP
+    rate: 120Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: pbi-gw01-to-ssas-analytics
+    source: DAL-PBI-GW01
+    source_port: 59021
+    destination: DAL-SSAS-01
+    destination_port: 2383
+    protocol: TCP
+    rate: 423Mbps
+    enabled: true
+    active_timeout: 5s
+  # CRM sync to SAP
+  - name: crm-conn01-to-sap-app01
+    source: DAL-CRM-CONN01
+    source_port: 59030
+    destination: DAL-SAP-APP01
+    destination_port: 8000
+    protocol: TCP
+    rate: 261Mbps
+    enabled: true
+    active_timeout: 5s
+  # HR to SAP
+  - name: hr-conn01-to-sap-app02
+    source: DAL-HR-CONN01
+    source_port: 59031
+    destination: DAL-SAP-APP02
+    destination_port: 8000
+    protocol: TCP
+    rate: 201Mbps
+    enabled: true
+    active_timeout: 5s
+  # Java legacy app to Oracle
+  - name: java01-to-oracle01
+    source: DAL-APP-JV01
+    source_port: 59040
+    destination: DAL-ORA-01
+    destination_port: 1521
+    protocol: TCP
+    rate: 100Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: java02-to-oracle02
+    source: DAL-APP-JV02
+    source_port: 59041
+    destination: DAL-ORA-02
+    destination_port: 1521
+    protocol: TCP
+    rate: 463Mbps
+    enabled: true
+    active_timeout: 5s
+  # K8s → Postgres/Redis
+  - name: k8s-wrk01-to-pg01
+    source: DAL-K8S-WRK01
+    source_port: 59050
+    destination: DAL-PG-01
+    destination_port: 5432
+    protocol: TCP
+    rate: 403Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: k8s-wrk02-to-redis01
+    source: DAL-K8S-WRK02
+    source_port: 59051
+    destination: DAL-REDIS-01
+    destination_port: 6379
+    protocol: TCP
+    rate: 302Mbps
+    enabled: true
+    active_timeout: 5s
+  # MES → Historian (factory to Dallas for central reporting)
+  - name: pit-historian-to-dal-mes-rpt
+    source: PIT-HISTORIAN-01
+    source_port: 59060
+    destination: DAL-MES-RPT01
+    destination_port: 443
+    protocol: TCP
+    rate: 201Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: det-historian-to-dal-mes-rpt
+    source: DET-HISTORIAN-01
+    source_port: 59061
+    destination: DAL-MES-RPT01
+    destination_port: 443
+    protocol: TCP
+    rate: 188Mbps
+    enabled: true
+    active_timeout: 5s
+  - name: bhm-historian-to-dal-mes-rpt
+    source: BHM-HISTORIAN-01
+    source_port: 59062
+    destination: DAL-MES-RPT01
+    destination_port: 443
+    protocol: TCP
+    rate: 180Mbps
+    enabled: true
+    active_timeout: 5s
+
+collectors:
+  - name: flowsight-v2
+    address: 10.250.0.4:9995
+    version: v9

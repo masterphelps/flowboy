@@ -103,10 +103,10 @@ func TestV9TemplateHeaderFields(t *testing.T) {
 		t.Errorf("template ID: got %d, want 256", tmplID)
 	}
 
-	// Field count = 13 fields in our default template
+	// Field count = 14 fields in our default template (including TCP_FLAGS)
 	fieldCount := binary.BigEndian.Uint16(data[26:28])
-	if fieldCount != 13 {
-		t.Errorf("field count: got %d, want 13", fieldCount)
+	if fieldCount != 14 {
+		t.Errorf("field count: got %d, want 14", fieldCount)
 	}
 }
 
@@ -145,46 +145,50 @@ func TestV9DataRecordByteValues(t *testing.T) {
 	if data[9] != 0 {
 		t.Errorf("SRC_TOS: got %d, want 0", data[9])
 	}
-	// L4_SRC_PORT at offset 10
-	if got := binary.BigEndian.Uint16(data[10:12]); got != 80 {
+	// TCP_FLAGS at offset 10
+	if data[10] != 0 {
+		t.Errorf("TCP_FLAGS: got %d, want 0", data[10])
+	}
+	// L4_SRC_PORT at offset 11
+	if got := binary.BigEndian.Uint16(data[11:13]); got != 80 {
 		t.Errorf("L4_SRC_PORT: got %d, want 80", got)
 	}
-	// IPV4_SRC_ADDR at offset 12
-	if data[12] != 10 || data[13] != 0 || data[14] != 0 || data[15] != 1 {
-		t.Errorf("IPV4_SRC_ADDR: got %v, want [10 0 0 1]", data[12:16])
+	// IPV4_SRC_ADDR at offset 13
+	if data[13] != 10 || data[14] != 0 || data[15] != 0 || data[16] != 1 {
+		t.Errorf("IPV4_SRC_ADDR: got %v, want [10 0 0 1]", data[13:17])
 	}
-	// SRC_MASK at offset 16
-	if data[16] != 24 {
-		t.Errorf("SRC_MASK: got %d, want 24", data[16])
+	// SRC_MASK at offset 17
+	if data[17] != 24 {
+		t.Errorf("SRC_MASK: got %d, want 24", data[17])
 	}
-	// L4_DST_PORT at offset 17
-	if got := binary.BigEndian.Uint16(data[17:19]); got != 12345 {
+	// L4_DST_PORT at offset 18
+	if got := binary.BigEndian.Uint16(data[18:20]); got != 12345 {
 		t.Errorf("L4_DST_PORT: got %d, want 12345", got)
 	}
-	// IPV4_DST_ADDR at offset 19
-	if data[19] != 10 || data[20] != 0 || data[21] != 0 || data[22] != 2 {
-		t.Errorf("IPV4_DST_ADDR: got %v, want [10 0 0 2]", data[19:23])
+	// IPV4_DST_ADDR at offset 20
+	if data[20] != 10 || data[21] != 0 || data[22] != 0 || data[23] != 2 {
+		t.Errorf("IPV4_DST_ADDR: got %v, want [10 0 0 2]", data[20:24])
 	}
-	// DST_MASK at offset 23
-	if data[23] != 16 {
-		t.Errorf("DST_MASK: got %d, want 16", data[23])
+	// DST_MASK at offset 24
+	if data[24] != 16 {
+		t.Errorf("DST_MASK: got %d, want 16", data[24])
 	}
-	// LAST_SWITCHED at offset 24
-	if got := binary.BigEndian.Uint32(data[24:28]); got != 200 {
+	// LAST_SWITCHED at offset 25
+	if got := binary.BigEndian.Uint32(data[25:29]); got != 200 {
 		t.Errorf("LAST_SWITCHED: got %d, want 200", got)
 	}
-	// FIRST_SWITCHED at offset 28
-	if got := binary.BigEndian.Uint32(data[28:32]); got != 100 {
+	// FIRST_SWITCHED at offset 29
+	if got := binary.BigEndian.Uint32(data[29:33]); got != 100 {
 		t.Errorf("FIRST_SWITCHED: got %d, want 100", got)
 	}
-	// APPLICATION_ID at offset 32
-	if got := binary.BigEndian.Uint32(data[32:36]); got != 99 {
+	// APPLICATION_ID at offset 33
+	if got := binary.BigEndian.Uint32(data[33:37]); got != 99 {
 		t.Errorf("APPLICATION_ID: got %d, want 99", got)
 	}
 
-	// Total record size should be 36 bytes.
-	if len(data) != 36 {
-		t.Errorf("record size: got %d, want 36", len(data))
+	// Total record size should be 37 bytes (was 36, +1 for TCP_FLAGS).
+	if len(data) != 37 {
+		t.Errorf("record size: got %d, want 37", len(data))
 	}
 }
 

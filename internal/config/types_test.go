@@ -45,6 +45,26 @@ func TestFlowDefaults(t *testing.T) {
 	}
 }
 
+func TestFluctuationDefaults(t *testing.T) {
+	f := DefaultFluctuation()
+	if f.Amplitude != 0.3 {
+		t.Errorf("expected amplitude 0.3, got %f", f.Amplitude)
+	}
+	if f.Period != time.Hour {
+		t.Errorf("expected period 1h, got %v", f.Period)
+	}
+	if f.Phase != 0 {
+		t.Errorf("expected phase 0, got %v", f.Phase)
+	}
+}
+
+func TestConnectionStyleDefault(t *testing.T) {
+	f := NewFlow()
+	if f.ConnectionStyle != "persistent" {
+		t.Errorf("expected persistent, got %s", f.ConnectionStyle)
+	}
+}
+
 func TestParseRate(t *testing.T) {
 	tests := []struct {
 		input   string

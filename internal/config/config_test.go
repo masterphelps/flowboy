@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -77,6 +78,61 @@ func TestSaveConfig(t *testing.T) {
 	}
 	if loaded.Machines[0].Name != "test-machine" {
 		t.Errorf("expected test-machine, got %s", loaded.Machines[0].Name)
+	}
+}
+
+func TestConfigRoundTripWithFluctuation(t *testing.T) {
+	cfg := &Config{
+		Fluctuation: &Fluctuation{
+			Amplitude: 0.5,
+			Period:    30 * time.Minute,
+		},
+		Machines: []MachineConfig{
+			{Name: "test", IP: "192.168.1.1", Mask: 24},
+		},
+		Flows: []FlowConfig{
+			{
+				Name:            "test-flow",
+				Source:          "test",
+				SourcePort:      443,
+				Destination:     "test",
+				DestPort:        5432,
+				Protocol:        "TCP",
+				Rate:            "100Mbps",
+				Enabled:         true,
+				ConnectionStyle: "transactional",
+				Fluctuation:     &Fluctuation{Amplitude: 0.8, Period: time.Hour},
+			},
+		},
+	}
+
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "test.yaml")
+
+	err := SaveConfig(cfg, path)
+	if err != nil {
+		t.Fatalf("SaveConfig failed: %v", err)
+	}
+
+	loaded, err := LoadConfig(path)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
+
+	if loaded.Fluctuation == nil {
+		t.Fatal("expected global fluctuation")
+	}
+	if loaded.Fluctuation.Amplitude != 0.5 {
+		t.Errorf("global amplitude: expected 0.5, got %f", loaded.Fluctuation.Amplitude)
+	}
+	if loaded.Flows[0].ConnectionStyle != "transactional" {
+		t.Errorf("connection_style: expected transactional, got %s", loaded.Flows[0].ConnectionStyle)
+	}
+	if loaded.Flows[0].Fluctuation == nil {
+		t.Fatal("expected per-flow fluctuation")
+	}
+	if loaded.Flows[0].Fluctuation.Amplitude != 0.8 {
+		t.Errorf("per-flow amplitude: expected 0.8, got %f", loaded.Flows[0].Fluctuation.Amplitude)
 	}
 }
 

@@ -38,7 +38,9 @@ type FlowConfig struct {
 	AppID           uint32 `yaml:"app_id,omitempty"`
 	ActiveTimeout   string `yaml:"active_timeout,omitempty"`
 	InactiveTimeout string `yaml:"inactive_timeout,omitempty"`
-	Enabled         bool   `yaml:"enabled"`
+	Enabled         bool         `yaml:"enabled"`
+	ConnectionStyle string       `yaml:"connection_style,omitempty"`
+	Fluctuation     *Fluctuation `yaml:"fluctuation,omitempty"`
 }
 
 // ToFlow converts a FlowConfig to a Flow with parsed durations.
@@ -53,6 +55,13 @@ func (fc FlowConfig) ToFlow() (Flow, error) {
 	f.Rate = fc.Rate
 	f.AppID = fc.AppID
 	f.Enabled = fc.Enabled
+
+	if fc.ConnectionStyle != "" {
+		f.ConnectionStyle = fc.ConnectionStyle
+	}
+	if fc.Fluctuation != nil {
+		f.Fluctuation = fc.Fluctuation
+	}
 
 	if fc.ActiveTimeout != "" {
 		d, err := time.ParseDuration(fc.ActiveTimeout)
@@ -79,9 +88,10 @@ type Segment struct {
 
 // Config is the top-level YAML configuration.
 type Config struct {
-	Machines   []MachineConfig `yaml:"machines"`
-	Flows      []FlowConfig    `yaml:"flows"`
-	Collectors []Collector     `yaml:"collectors"`
+	Machines    []MachineConfig `yaml:"machines"`
+	Flows       []FlowConfig    `yaml:"flows"`
+	Collectors  []Collector     `yaml:"collectors"`
+	Fluctuation *Fluctuation    `yaml:"fluctuation,omitempty"`
 }
 
 // LoadConfig reads and parses a YAML config file.
