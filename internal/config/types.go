@@ -59,9 +59,9 @@ type Collector struct {
 
 // Fluctuation controls sine-wave rate variation.
 type Fluctuation struct {
-	Amplitude float64       `yaml:"amplitude"`      // 0.0-1.0, default 0.3
-	Period    time.Duration `yaml:"period"`          // default 1h
-	Phase     time.Duration `yaml:"phase,omitempty"` // offset, default 0
+	Amplitude float64       `yaml:"amplitude" json:"amplitude"`           // 0.0-1.0, default 0.3
+	Period    time.Duration `yaml:"period" json:"period"`                 // default 1h
+	Phase     time.Duration `yaml:"phase,omitempty" json:"phase,omitempty"` // offset, default 0
 }
 
 // DefaultFluctuation returns fluctuation with sensible defaults.

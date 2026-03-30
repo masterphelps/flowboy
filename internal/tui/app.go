@@ -312,7 +312,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Handle individual flow toggle (start/stop).
 	case FlowToggleMsg:
 		if m.engine != nil {
-			// Remove and re-add with updated enabled state (matches web GUI behavior)
 			_ = m.engine.RemoveFlow(msg.Flow.Name)
 			f := config.NewFlow()
 			f.Name = msg.Flow.Name
@@ -325,6 +324,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			f.AppID = msg.Flow.AppID
 			f.Enabled = msg.Flow.Enabled
 			f.ConnectionStyle = msg.Flow.ConnectionStyle
+			f.Fluctuation = msg.Flow.Fluctuation
 			_ = m.engine.AddFlow(f)
 		}
 		m.saveConfig()
@@ -656,6 +656,7 @@ func (m *Model) saveConfig() {
 			AppID:           fd.AppID,
 			Enabled:         fd.Enabled,
 			ConnectionStyle: fd.ConnectionStyle,
+			Fluctuation:     fd.Fluctuation,
 		}
 	}
 

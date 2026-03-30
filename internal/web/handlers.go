@@ -204,28 +204,30 @@ func (s *Server) handleFlowByName(w http.ResponseWriter, r *http.Request) {
 }
 
 type flowResponse struct {
-	Name        string `json:"name"`
-	Source      string `json:"source"`
-	SourcePort  uint16 `json:"source_port"`
-	Destination string `json:"destination"`
-	DestPort    uint16 `json:"destination_port"`
-	Protocol    string `json:"protocol"`
-	Rate        string `json:"rate"`
-	AppID       uint32 `json:"app_id,omitempty"`
-	Enabled     bool   `json:"enabled"`
+	Name            string `json:"name"`
+	Source          string `json:"source"`
+	SourcePort      uint16 `json:"source_port"`
+	Destination     string `json:"destination"`
+	DestPort        uint16 `json:"destination_port"`
+	Protocol        string `json:"protocol"`
+	Rate            string `json:"rate"`
+	AppID           uint32 `json:"app_id,omitempty"`
+	Enabled         bool   `json:"enabled"`
+	ConnectionStyle string `json:"connection_style,omitempty"`
 }
 
 func flowToResponse(f config.Flow) flowResponse {
 	return flowResponse{
-		Name:        f.Name,
-		Source:      f.SourceName,
-		SourcePort:  f.SourcePort,
-		Destination: f.DestName,
-		DestPort:    f.DestPort,
-		Protocol:    f.Protocol,
-		Rate:        f.Rate,
-		AppID:       f.AppID,
-		Enabled:     f.Enabled,
+		Name:            f.Name,
+		Source:          f.SourceName,
+		SourcePort:      f.SourcePort,
+		Destination:     f.DestName,
+		DestPort:        f.DestPort,
+		Protocol:        f.Protocol,
+		Rate:            f.Rate,
+		AppID:           f.AppID,
+		Enabled:         f.Enabled,
+		ConnectionStyle: f.ConnectionStyle,
 	}
 }
 

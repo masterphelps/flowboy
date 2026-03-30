@@ -45,6 +45,10 @@ type FlowDisplay struct {
 	Active          bool
 	Enabled         bool
 	ConnectionStyle string
+	Fluctuation     *config.Fluctuation
+	FluctAmplitude  string
+	FluctPeriod     string
+	FluctPhase      string
 }
 
 // FlowPanel is a sub-model that renders the active flows list and handles
@@ -56,15 +60,19 @@ type FlowPanel struct {
 	width         int
 	height        int
 	tick          int // animation frame counter
-	nameInput     textinput.Model
-	srcInput      textinput.Model // source machine name
-	srcPortInput  textinput.Model
-	dstInput      textinput.Model // dest machine name
-	dstPortInput  textinput.Model
-	protoInput    textinput.Model
-	rateInput     textinput.Model
-	appIDInput    textinput.Model
-	formFocus     int
+	nameInput       textinput.Model
+	srcInput        textinput.Model // source machine name
+	srcPortInput    textinput.Model
+	dstInput        textinput.Model // dest machine name
+	dstPortInput    textinput.Model
+	protoInput      textinput.Model
+	rateInput       textinput.Model
+	connStyleInput  textinput.Model
+	fluctAmpInput   textinput.Model
+	fluctPeriodInput textinput.Model
+	fluctPhaseInput textinput.Model
+	appIDInput      textinput.Model
+	formFocus       int
 	editName      string // original name when editing
 	sortBy        string // "source" or "dest"
 	filterMachine string // filter flows by machine name (empty = show all)
@@ -107,20 +115,44 @@ func NewFlowPanel() FlowPanel {
 	ri.CharLimit = 20
 	ri.Width = 12
 
+	csi := textinput.New()
+	csi.Placeholder = "persistent"
+	csi.CharLimit = 15
+	csi.Width = 15
+
+	fai := textinput.New()
+	fai.Placeholder = "0.3"
+	fai.CharLimit = 5
+	fai.Width = 6
+
+	fpi := textinput.New()
+	fpi.Placeholder = "1h"
+	fpi.CharLimit = 10
+	fpi.Width = 10
+
+	fphi := textinput.New()
+	fphi.Placeholder = "0s"
+	fphi.CharLimit = 10
+	fphi.Width = 10
+
 	ai := textinput.New()
 	ai.Placeholder = "0"
 	ai.CharLimit = 10
 	ai.Width = 10
 
 	return FlowPanel{
-		nameInput:    ni,
-		srcInput:     si,
-		srcPortInput: spi,
-		dstInput:     di,
-		dstPortInput: dpi,
-		protoInput:   pi,
-		rateInput:    ri,
-		appIDInput:   ai,
+		nameInput:        ni,
+		srcInput:         si,
+		srcPortInput:     spi,
+		dstInput:         di,
+		dstPortInput:     dpi,
+		protoInput:       pi,
+		rateInput:        ri,
+		connStyleInput:   csi,
+		fluctAmpInput:    fai,
+		fluctPeriodInput: fpi,
+		fluctPhaseInput:  fphi,
+		appIDInput:       ai,
 	}
 }
 
@@ -128,7 +160,7 @@ func NewFlowPanel() FlowPanel {
 func (p *FlowPanel) SetFlows(flows []config.Flow) {
 	p.flows = make([]FlowDisplay, len(flows))
 	for i, f := range flows {
-		p.flows[i] = FlowDisplay{
+		fd := FlowDisplay{
 			Name:            f.Name,
 			Source:          f.SourceName,
 			SrcPort:         f.SourcePort,
@@ -140,7 +172,14 @@ func (p *FlowPanel) SetFlows(flows []config.Flow) {
 			Active:          f.Enabled,
 			Enabled:         f.Enabled,
 			ConnectionStyle: f.ConnectionStyle,
+			Fluctuation:     f.Fluctuation,
 		}
+		if f.Fluctuation != nil {
+			fd.FluctAmplitude = strconv.FormatFloat(f.Fluctuation.Amplitude, 'f', -1, 64)
+			fd.FluctPeriod = f.Fluctuation.Period.String()
+			fd.FluctPhase = f.Fluctuation.Phase.String()
+		}
+		p.flows[i] = fd
 	}
 	if p.cursor >= len(p.flows) {
 		p.cursor = max(0, len(p.flows)-1)
@@ -279,6 +318,10 @@ func (p *FlowPanel) enterAddMode() {
 	p.dstPortInput.SetValue("")
 	p.protoInput.SetValue("TCP")
 	p.rateInput.SetValue("")
+	p.connStyleInput.SetValue("persistent")
+	p.fluctAmpInput.SetValue("")
+	p.fluctPeriodInput.SetValue("")
+	p.fluctPhaseInput.SetValue("")
 	p.appIDInput.SetValue("0")
 	p.nameInput.Focus()
 	p.blurAllExcept(0)
@@ -296,12 +339,16 @@ func (p *FlowPanel) enterEditMode() {
 	p.dstPortInput.SetValue(strconv.Itoa(int(f.DstPort)))
 	p.protoInput.SetValue(f.Protocol)
 	p.rateInput.SetValue(f.Rate)
+	p.connStyleInput.SetValue(f.ConnectionStyle)
+	p.fluctAmpInput.SetValue(f.FluctAmplitude)
+	p.fluctPeriodInput.SetValue(f.FluctPeriod)
+	p.fluctPhaseInput.SetValue(f.FluctPhase)
 	p.appIDInput.SetValue(strconv.FormatUint(uint64(f.AppID), 10))
 	p.nameInput.Focus()
 	p.blurAllExcept(0)
 }
 
-const flowFormFieldCount = 8
+const flowFormFieldCount = 12
 
 // -- Form mode (add / edit) -----------------------------------------------
 
@@ -324,16 +371,23 @@ func (p *FlowPanel) updateForm(msg tea.KeyMsg) tea.Cmd {
 			return nil
 		}
 		fd := FlowDisplay{
-			Name:     f.Name,
-			Source:   f.SourceName,
-			SrcPort:  f.SourcePort,
-			Dest:     f.DestName,
-			DstPort:  f.DestPort,
-			Protocol: f.Protocol,
-			Rate:     f.Rate,
-			AppID:    f.AppID,
-			Active:   f.Enabled,
-			Enabled:  f.Enabled,
+			Name:            f.Name,
+			Source:          f.SourceName,
+			SrcPort:         f.SourcePort,
+			Dest:            f.DestName,
+			DstPort:         f.DestPort,
+			Protocol:        f.Protocol,
+			Rate:            f.Rate,
+			AppID:           f.AppID,
+			Active:          f.Enabled,
+			Enabled:         f.Enabled,
+			ConnectionStyle: f.ConnectionStyle,
+			Fluctuation:     f.Fluctuation,
+		}
+		if f.Fluctuation != nil {
+			fd.FluctAmplitude = strconv.FormatFloat(f.Fluctuation.Amplitude, 'f', -1, 64)
+			fd.FluctPeriod = f.Fluctuation.Period.String()
+			fd.FluctPhase = f.Fluctuation.Phase.String()
 		}
 		if p.mode == flowAdding {
 			p.flows = append(p.flows, fd)
@@ -371,6 +425,10 @@ func (p *FlowPanel) blurAllExcept(focus int) {
 	p.dstPortInput.Blur()
 	p.protoInput.Blur()
 	p.rateInput.Blur()
+	p.connStyleInput.Blur()
+	p.fluctAmpInput.Blur()
+	p.fluctPeriodInput.Blur()
+	p.fluctPhaseInput.Blur()
 	p.appIDInput.Blur()
 	switch focus {
 	case 0:
@@ -388,6 +446,14 @@ func (p *FlowPanel) blurAllExcept(focus int) {
 	case 6:
 		p.rateInput.Focus()
 	case 7:
+		p.connStyleInput.Focus()
+	case 8:
+		p.fluctAmpInput.Focus()
+	case 9:
+		p.fluctPeriodInput.Focus()
+	case 10:
+		p.fluctPhaseInput.Focus()
+	case 11:
 		p.appIDInput.Focus()
 	}
 }
@@ -416,6 +482,18 @@ func (p *FlowPanel) updateFocusedInput(msg tea.KeyMsg) {
 		m, _ := p.rateInput.Update(msg)
 		p.rateInput = m
 	case 7:
+		m, _ := p.connStyleInput.Update(msg)
+		p.connStyleInput = m
+	case 8:
+		m, _ := p.fluctAmpInput.Update(msg)
+		p.fluctAmpInput = m
+	case 9:
+		m, _ := p.fluctPeriodInput.Update(msg)
+		p.fluctPeriodInput = m
+	case 10:
+		m, _ := p.fluctPhaseInput.Update(msg)
+		p.fluctPhaseInput = m
+	case 11:
 		m, _ := p.appIDInput.Update(msg)
 		p.appIDInput = m
 	}
@@ -468,6 +546,32 @@ func (p *FlowPanel) validateForm() (config.Flow, bool) {
 	f.Protocol = strings.ToUpper(proto)
 	f.Rate = rate
 	f.AppID = appID
+
+	connStyle := strings.TrimSpace(p.connStyleInput.Value())
+	if connStyle == "" {
+		connStyle = "persistent"
+	}
+	f.ConnectionStyle = connStyle
+
+	ampStr := strings.TrimSpace(p.fluctAmpInput.Value())
+	if ampStr != "" {
+		amp, err := strconv.ParseFloat(ampStr, 64)
+		if err == nil {
+			periodStr := strings.TrimSpace(p.fluctPeriodInput.Value())
+			period, _ := time.ParseDuration(periodStr)
+			if period == 0 {
+				period = time.Hour
+			}
+			phaseStr := strings.TrimSpace(p.fluctPhaseInput.Value())
+			phase, _ := time.ParseDuration(phaseStr)
+			f.Fluctuation = &config.Fluctuation{
+				Amplitude: amp,
+				Period:    period,
+				Phase:     phase,
+			}
+		}
+	}
+
 	return f, true
 }
 
@@ -734,14 +838,18 @@ func (p *FlowPanel) renderForm() string {
 		label string
 		view  string
 	}{
-		{"Name:     ", p.nameInput.View()},
-		{"Source:   ", p.srcInput.View()},
-		{"Src Port: ", p.srcPortInput.View()},
-		{"Dest:     ", p.dstInput.View()},
-		{"Dst Port: ", p.dstPortInput.View()},
-		{"Protocol: ", p.protoInput.View()},
-		{"Rate:     ", p.rateInput.View()},
-		{"App ID:   ", p.appIDInput.View()},
+		{"Name:      ", p.nameInput.View()},
+		{"Source:    ", p.srcInput.View()},
+		{"Src Port:  ", p.srcPortInput.View()},
+		{"Dest:      ", p.dstInput.View()},
+		{"Dst Port:  ", p.dstPortInput.View()},
+		{"Protocol:  ", p.protoInput.View()},
+		{"Rate:      ", p.rateInput.View()},
+		{"Conn Style:", p.connStyleInput.View()},
+		{"Fluct Amp: ", p.fluctAmpInput.View()},
+		{"Fluct Per: ", p.fluctPeriodInput.View()},
+		{"Fluct Pha: ", p.fluctPhaseInput.View()},
+		{"App ID:    ", p.appIDInput.View()},
 	}
 	for i, f := range fields {
 		prefix := "  "

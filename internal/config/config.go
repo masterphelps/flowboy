@@ -28,19 +28,19 @@ func (mc MachineConfig) ToMachine() (Machine, error) {
 
 // FlowConfig is the YAML-friendly representation of a Flow.
 type FlowConfig struct {
-	Name            string `yaml:"name"`
-	Source          string `yaml:"source"`
-	SourcePort      uint16 `yaml:"source_port"`
-	Destination     string `yaml:"destination"`
-	DestPort        uint16 `yaml:"destination_port"`
-	Protocol        string `yaml:"protocol"`
-	Rate            string `yaml:"rate"`
-	AppID           uint32 `yaml:"app_id,omitempty"`
-	ActiveTimeout   string `yaml:"active_timeout,omitempty"`
-	InactiveTimeout string `yaml:"inactive_timeout,omitempty"`
-	Enabled         bool         `yaml:"enabled"`
-	ConnectionStyle string       `yaml:"connection_style,omitempty"`
-	Fluctuation     *Fluctuation `yaml:"fluctuation,omitempty"`
+	Name            string `yaml:"name" json:"name"`
+	Source          string `yaml:"source" json:"source"`
+	SourcePort      uint16 `yaml:"source_port" json:"source_port"`
+	Destination     string `yaml:"destination" json:"destination"`
+	DestPort        uint16 `yaml:"destination_port" json:"destination_port"`
+	Protocol        string `yaml:"protocol" json:"protocol"`
+	Rate            string `yaml:"rate" json:"rate"`
+	AppID           uint32 `yaml:"app_id,omitempty" json:"app_id,omitempty"`
+	ActiveTimeout   string `yaml:"active_timeout,omitempty" json:"active_timeout,omitempty"`
+	InactiveTimeout string `yaml:"inactive_timeout,omitempty" json:"inactive_timeout,omitempty"`
+	Enabled         bool         `yaml:"enabled" json:"enabled"`
+	ConnectionStyle string       `yaml:"connection_style,omitempty" json:"connection_style,omitempty"`
+	Fluctuation     *Fluctuation `yaml:"fluctuation,omitempty" json:"fluctuation,omitempty"`
 }
 
 // ToFlow converts a FlowConfig to a Flow with parsed durations.

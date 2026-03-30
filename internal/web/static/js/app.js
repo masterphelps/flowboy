@@ -720,6 +720,17 @@ function showFlowForm() {
         </select>
         <label>RATE</label>
         <input type="text" id="f-rate" value="1Mbps" placeholder="e.g. 1Mbps, 500Kbps">
+        <label>CONNECTION STYLE</label>
+        <select id="f-connstyle">
+            <option value="persistent" selected>PERSISTENT (long-lived: SYN → ACK+PSH)</option>
+            <option value="transactional">TRANSACTIONAL (short-lived: SYN+ACK+PSH+FIN)</option>
+        </select>
+        <label>FLUCTUATION AMPLITUDE (0.0-1.0)</label>
+        <input type="text" id="f-fluct-amp" placeholder="0.3">
+        <label>FLUCTUATION PERIOD (Go duration)</label>
+        <input type="text" id="f-fluct-period" placeholder="1h">
+        <label>FLUCTUATION PHASE (Go duration)</label>
+        <input type="text" id="f-fluct-phase" placeholder="0s">
         <label>APP ID (optional)</label>
         <input type="number" id="f-appid" value="0" min="0">
         <div class="modal-actions">
@@ -736,20 +747,33 @@ async function submitFlow() {
     const destination_port = parseInt(document.getElementById('f-dport').value, 10) || 0;
     const protocol = document.getElementById('f-proto').value || 'TCP';
     const rate = document.getElementById('f-rate').value.trim() || '1Mbps';
+    const connection_style = document.getElementById('f-connstyle').value || 'persistent';
     const app_id = parseInt(document.getElementById('f-appid').value, 10) || 0;
+
+    const fluctAmp = document.getElementById('f-fluct-amp').value.trim();
+    const fluctPeriod = document.getElementById('f-fluct-period').value.trim();
+    const fluctPhase = document.getElementById('f-fluct-phase').value.trim();
 
     if (!source || !destination) return;
     let name = source + '-to-' + destination;
-    // Disambiguate if a flow with this name already exists
     if (flows.some(f => f.name === name)) {
         name = name + '-' + destination_port;
     }
 
+    const body = {
+        name, source, source_port, destination, destination_port,
+        protocol, rate, connection_style, app_id, enabled: true,
+    };
+    if (fluctAmp) {
+        body.fluctuation = {
+            amplitude: parseFloat(fluctAmp) || 0,
+            period: parseDurationToNs(fluctPeriod || '1h'),
+            phase: parseDurationToNs(fluctPhase || '0s'),
+        };
+    }
+
     try {
-        await api('POST', '/api/flows', {
-            name, source, source_port, destination, destination_port,
-            protocol, rate, app_id, enabled: true,
-        });
+        await api('POST', '/api/flows', body);
         hideModal();
         await fetchFlows();
     } catch (e) {
@@ -763,6 +787,8 @@ function showEditFlowForm(name) {
     if (!f) return;
     const protoTCP = f.protocol === 'TCP' ? ' selected' : '';
     const protoUDP = f.protocol === 'UDP' ? ' selected' : '';
+    const connPersistent = (f.connection_style || 'persistent') === 'persistent' ? ' selected' : '';
+    const connTransactional = (f.connection_style || '') === 'transactional' ? ' selected' : '';
     showModal(`
         <div class="modal-title">EDIT FLOW</div>
         <input type="hidden" id="f-old-name" value="${esc(f.name)}">
@@ -781,6 +807,17 @@ function showEditFlowForm(name) {
         </select>
         <label>RATE</label>
         <input type="text" id="f-rate" value="${esc(f.rate)}">
+        <label>CONNECTION STYLE</label>
+        <select id="f-connstyle">
+            <option value="persistent"${connPersistent}>PERSISTENT (long-lived: SYN \u2192 ACK+PSH)</option>
+            <option value="transactional"${connTransactional}>TRANSACTIONAL (short-lived: SYN+ACK+PSH+FIN)</option>
+        </select>
+        <label>FLUCTUATION AMPLITUDE (0.0-1.0)</label>
+        <input type="text" id="f-fluct-amp" placeholder="0.3">
+        <label>FLUCTUATION PERIOD (Go duration)</label>
+        <input type="text" id="f-fluct-period" placeholder="1h">
+        <label>FLUCTUATION PHASE (Go duration)</label>
+        <input type="text" id="f-fluct-phase" placeholder="0s">
         <label>APP ID (optional)</label>
         <input type="number" id="f-appid" value="${f.app_id || 0}" min="0">
         <div class="modal-actions">
@@ -798,16 +835,30 @@ async function submitEditFlow() {
     const destination_port = parseInt(document.getElementById('f-dport').value, 10) || 0;
     const protocol = document.getElementById('f-proto').value || 'TCP';
     const rate = document.getElementById('f-rate').value.trim() || '1Mbps';
+    const connection_style = document.getElementById('f-connstyle').value || 'persistent';
     const app_id = parseInt(document.getElementById('f-appid').value, 10) || 0;
+
+    const fluctAmp = document.getElementById('f-fluct-amp').value.trim();
+    const fluctPeriod = document.getElementById('f-fluct-period').value.trim();
+    const fluctPhase = document.getElementById('f-fluct-phase').value.trim();
 
     if (!source || !destination) return;
     const name = source + '-to-' + destination;
 
+    const body = {
+        name, source, source_port, destination, destination_port,
+        protocol, rate, connection_style, app_id, enabled: true,
+    };
+    if (fluctAmp) {
+        body.fluctuation = {
+            amplitude: parseFloat(fluctAmp) || 0,
+            period: parseDurationToNs(fluctPeriod || '1h'),
+            phase: parseDurationToNs(fluctPhase || '0s'),
+        };
+    }
+
     try {
-        await api('PUT', `/api/flows/${encodeURIComponent(oldName)}`, {
-            name, source, source_port, destination, destination_port,
-            protocol, rate, app_id, enabled: true,
-        });
+        await api('PUT', `/api/flows/${encodeURIComponent(oldName)}`, body);
         hideModal();
         await fetchFlows();
     } catch (e) {
@@ -1070,6 +1121,26 @@ function esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function parseDurationToNs(s) {
+    if (!s) return 0;
+    let total = 0;
+    const re = /(\d+(?:\.\d+)?)(ns|us|µs|ms|s|m|h)/g;
+    let match;
+    while ((match = re.exec(s)) !== null) {
+        const val = parseFloat(match[1]);
+        const unit = match[2];
+        switch (unit) {
+            case 'ns': total += val; break;
+            case 'us': case 'µs': total += val * 1e3; break;
+            case 'ms': total += val * 1e6; break;
+            case 's': total += val * 1e9; break;
+            case 'm': total += val * 60e9; break;
+            case 'h': total += val * 3600e9; break;
+        }
+    }
+    return total;
 }
 
 function parseRateToBps(rate) {
