@@ -414,10 +414,12 @@ function setFullscreenTab(tab) {
     // Render content based on tab
     if (tab === 'machines') {
         const sorted = [...machines].sort((a, b) => a.name.localeCompare(b.name));
+        const affected = getAnomalyAffectedMachines();
         content.innerHTML = sorted.length ? sorted.map(m => {
             const sel = (selectedMachine === m.name) ? ' selected' : '';
+            const anomaly = affected.has(m.name) ? ' anomaly-attacker' : '';
             const maskStr = m.mask > 0 ? `/${m.mask}` : '';
-            return `<div class="row machine-row${sel}" data-name="${esc(m.name)}" onclick="selectMachine('${esc(m.name)}')">
+            return `<div class="row machine-row${sel}${anomaly}" data-name="${esc(m.name)}" onclick="selectMachine('${esc(m.name)}')">
                 <span class="row-label">${esc(m.name)}</span>
                 <span class="row-detail">${esc(m.ip)}${maskStr}</span>
                 <span class="row-actions">
@@ -435,14 +437,16 @@ function setFullscreenTab(tab) {
         if (flowSortBy) {
             visible = [...visible].sort((a, b) => a[flowSortBy].localeCompare(b[flowSortBy]));
         }
+        const fAffected = getAnomalyAffectedMachines();
         content.innerHTML = visible.length ? visible.map(f => {
             const sel = (selectedFlow === f.name) ? ' selected' : '';
             const active = f.enabled ? ' active' : ' inactive';
+            const anomaly = (fAffected.has(f.source) || fAffected.has(f.destination)) ? ' anomaly-affected' : '';
             const wave = f.enabled ? waveString() : '\u2500\u2500\u2500';
             const statusIcon = f.enabled ? '\u25a0' : '\u25b6';
             const toggleAction = f.enabled ? 'stop' : 'start';
             const toggleLabel = f.enabled ? 'STOP' : 'START';
-            return `<div class="row flow-row${sel}${active}" data-name="${esc(f.name)}" onclick="selectFlow('${esc(f.name)}')">
+            return `<div class="row flow-row${sel}${active}${anomaly}" data-name="${esc(f.name)}" onclick="selectFlow('${esc(f.name)}')">
                 <span class="flow-endpoints">${esc(f.source)}:${f.source_port} \u2192 ${esc(f.destination)}:${f.destination_port}</span>
                 <span class="flow-proto">${esc(f.protocol)}</span>
                 <span class="flow-bar"><span class="flow-bar-fill" style="width:${flowBarWidth(f)}%"></span></span>
