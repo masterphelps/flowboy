@@ -715,6 +715,59 @@ func (s *Server) newConfig(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "new", "file": "untitled.yaml"})
 }
 
+// ---------- Fluctuation ----------
+
+func (s *Server) handleFluctuation(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		f := s.engine.GlobalFluctuation()
+		if f == nil {
+			writeJSON(w, http.StatusOK, map[string]any{"amplitude": 0, "period": "1h", "phase": "0s"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"amplitude": f.Amplitude,
+			"period":    f.Period.String(),
+			"phase":     f.Phase.String(),
+		})
+	case http.MethodPut:
+		var req struct {
+			Amplitude float64 `json:"amplitude"`
+			Period    string  `json:"period"`
+		}
+		if err := readJSON(r, &req); err != nil {
+			http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		if req.Amplitude < 0 {
+			req.Amplitude = 0
+		}
+		if req.Amplitude > 1 {
+			req.Amplitude = 1
+		}
+		period := time.Hour
+		if req.Period != "" {
+			if d, err := time.ParseDuration(req.Period); err == nil && d > 0 {
+				period = d
+			}
+		}
+		f := &config.Fluctuation{
+			Amplitude: req.Amplitude,
+			Period:    period,
+		}
+		s.engine.SetGlobalFluctuation(f)
+		// Persist to config
+		s.config.Fluctuation = f
+		s.saveConfig()
+		writeJSON(w, http.StatusOK, map[string]any{
+			"amplitude": f.Amplitude,
+			"period":    f.Period.String(),
+		})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 // ---------- Anomalies ----------
 
 func (s *Server) handleAnomalyScenarios(w http.ResponseWriter, r *http.Request) {

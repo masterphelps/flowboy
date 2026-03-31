@@ -115,6 +115,11 @@
                 <button class="status-btn" id="file-btn" onclick="toggleFileDrawer()">FILE</button>
                 <button class="status-btn" id="collector-btn" onclick="toggleCollectorDrawer()">COLLECTORS <span id="collector-count">0</span></button>
                 <button class="status-btn" id="anomaly-btn" onclick="toggleAnomalyDrawer()">ANOMALY</button>
+                <span class="fluctuation-control">
+                    <label for="fluct-amp">FLUCT</label>
+                    <input type="range" id="fluct-amp" min="0" max="100" value="0" oninput="updateFluctuation(this.value)">
+                    <span id="fluct-pct">0%</span>
+                </span>
                 <span class="status-spacer"></span>
                 <button class="view-btn active" id="view-dashboard" onclick="setViewMode('dashboard')" title="Dashboard">
                     <span class="icon-grid"></span>

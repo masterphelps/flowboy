@@ -153,6 +153,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/configs", s.cors(s.handleConfigs))
 	s.mux.HandleFunc("/api/configs/", s.cors(s.handleConfigAction))
 
+	s.mux.HandleFunc("/api/fluctuation", s.cors(s.handleFluctuation))
+
 	s.mux.HandleFunc("/api/anomaly/scenarios", s.cors(s.handleAnomalyScenarios))
 	s.mux.HandleFunc("/api/anomaly/active", s.cors(s.handleAnomalyActive))
 	s.mux.HandleFunc("/api/anomaly/start", s.cors(s.handleAnomalyStart))

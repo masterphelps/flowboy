@@ -1011,6 +1011,56 @@ button:hover {
     50% { opacity: 0.5; }
 }
 
+/* ──── Fluctuation Slider ──── */
+.fluctuation-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #8df776;
+    letter-spacing: 1px;
+}
+
+.fluctuation-control label {
+    color: #d8c99e;
+    font-size: 10px;
+}
+
+.fluctuation-control input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 60px;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.fluctuation-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    background: #8df776;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.fluctuation-control input[type="range"]::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    background: #8df776;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+}
+
+#fluct-pct {
+    min-width: 28px;
+    text-align: right;
+}
+
 /* Anomaly highlighting — ONLY place non-standard colors are used */
 .machine-row.anomaly-attacker {
     border-left: 2px solid #ff6600;

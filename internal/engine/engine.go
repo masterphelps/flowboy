@@ -234,6 +234,13 @@ func (e *Engine) SetGlobalFluctuation(f *config.Fluctuation) {
 	e.globalFluctuation = f
 }
 
+// GlobalFluctuation returns the current global fluctuation settings.
+func (e *Engine) GlobalFluctuation() *config.Fluctuation {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.globalFluctuation
+}
+
 // Stats returns a read-only channel of flow statistics.
 func (e *Engine) Stats() <-chan FlowStats {
 	return e.stats

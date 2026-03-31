@@ -54,6 +54,36 @@ async function fetchEngineStatus() {
     updateStatusBar();
 }
 
+// ──── Fluctuation Control ────────────────────────────────────────────────────
+async function fetchFluctuation() {
+    try {
+        const data = await api('GET', '/api/fluctuation');
+        const pct = Math.round((data.amplitude || 0) * 100);
+        const slider = document.getElementById('fluct-amp');
+        const label = document.getElementById('fluct-pct');
+        if (slider) slider.value = pct;
+        if (label) label.textContent = pct + '%';
+    } catch (e) { /* ignore */ }
+}
+
+let fluctDebounce = null;
+function updateFluctuation(val) {
+    const pct = parseInt(val, 10);
+    const label = document.getElementById('fluct-pct');
+    if (label) label.textContent = pct + '%';
+
+    // Debounce the API call so dragging doesn't spam
+    if (fluctDebounce) clearTimeout(fluctDebounce);
+    fluctDebounce = setTimeout(async () => {
+        try {
+            await api('PUT', '/api/fluctuation', {
+                amplitude: pct / 100,
+                period: '1h',
+            });
+        } catch (e) { /* ignore */ }
+    }, 200);
+}
+
 // ──── Anomaly-Affected Machines ──────────────────────────────────────────────
 // Returns a Set of machine names involved in active anomalies.
 // If an anomaly has no targets (global), ALL machines are affected.
@@ -1259,6 +1289,7 @@ async function init() {
         fetchConfigs(),
         fetchAnomalyScenarios(),
         fetchActiveAnomalies(),
+        fetchFluctuation(),
     ]);
 
     // Highlight default sort button
