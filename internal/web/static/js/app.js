@@ -1073,7 +1073,7 @@ function showAnomalyTweakForm(type) {
         <label>INTENSITY (multiplier)</label>
         <input type="text" id="a-intensity" value="${s.default_intensity}">
         <label>TARGETS (optional — select machines)</label>
-        <select id="a-targets" multiple size="4" style="width:100%; background:#000; border:1px solid #333; color:#8df776; font-family:'Share Tech Mono',monospace; font-size:11px;">
+        <select id="a-targets" multiple size="4">
             <option value="">ALL MACHINES</option>
             ${machineOpts}
         </select>
