@@ -67,7 +67,7 @@ func (e *Engine) Start() {
 	// Start goroutines for any flows already added while engine was stopped.
 	for _, fr := range e.flows {
 		if fr.flow.Enabled {
-			go fr.run(e.records, e.stats, e.stopCh, e.globalFluctuation, e.anomalyMgr)
+			go fr.run(e.records, e.stats, e.stopCh, e)
 		}
 	}
 }
@@ -159,7 +159,7 @@ func (e *Engine) AddFlow(f config.Flow) error {
 	e.flows[f.Name] = fr
 
 	if e.running && f.Enabled {
-		go fr.run(e.records, e.stats, e.stopCh, e.globalFluctuation, e.anomalyMgr)
+		go fr.run(e.records, e.stats, e.stopCh, e)
 	}
 
 	return nil
@@ -248,7 +248,7 @@ func (e *Engine) Stats() <-chan FlowStats {
 
 // run is the main loop for a single flow's goroutine. It generates NetFlow v9
 // data records at the flow's ActiveTimeout interval.
-func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineStop <-chan struct{}, globalFluct *config.Fluctuation, anomalyMgr *anomaly.Manager) {
+func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineStop <-chan struct{}, eng *Engine) {
 	timeout := fr.flow.ActiveTimeout
 	if timeout <= 0 {
 		timeout = 60 * time.Second
@@ -268,7 +268,7 @@ func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineS
 			return
 		case <-ticker.C:
 			now := time.Now()
-			octets := fluctuateRate(fr.rate, timeout, now, fr.flow.Fluctuation, globalFluct)
+			octets := fluctuateRate(fr.rate, timeout, now, fr.flow.Fluctuation, eng.GlobalFluctuation())
 			packets := octets / 1500
 			if packets == 0 {
 				packets = 1
@@ -280,8 +280,8 @@ func (fr *flowRunner) run(records chan<- []byte, stats chan<- FlowStats, engineS
 			tcpFlags := fr.connState.nextFlags()
 
 			// Apply anomaly modifiers
-			if anomalyMgr != nil {
-				mod := anomalyMgr.GetModifiers(fr.flow.Name, fr.flow.SourceName)
+			if eng.anomalyMgr != nil {
+				mod := eng.anomalyMgr.GetModifiers(fr.flow.Name, fr.flow.SourceName)
 				octets = uint64(float64(octets) * mod.RateMultiplier)
 				if mod.FlagOverride != nil {
 					tcpFlags = *mod.FlagOverride
