@@ -58,26 +58,34 @@ async function fetchEngineStatus() {
 async function fetchFluctuation() {
     try {
         const data = await api('GET', '/api/fluctuation');
-        const pct = Math.round((data.amplitude || 0) * 100);
-        const slider = document.getElementById('fluct-amp');
-        const label = document.getElementById('fluct-pct');
-        if (slider) slider.value = pct;
-        if (label) label.textContent = pct + '%';
+        const floorPct = Math.round((data.floor || 1.0) * 100);
+        const ceilPct = Math.round((data.ceiling || 1.0) * 100);
+        const floorSlider = document.getElementById('fluct-floor');
+        const ceilSlider = document.getElementById('fluct-ceil');
+        const floorLabel = document.getElementById('fluct-floor-pct');
+        const ceilLabel = document.getElementById('fluct-ceil-pct');
+        if (floorSlider) floorSlider.value = floorPct;
+        if (ceilSlider) ceilSlider.value = ceilPct;
+        if (floorLabel) floorLabel.textContent = floorPct + '%';
+        if (ceilLabel) ceilLabel.textContent = ceilPct + '%';
     } catch (e) { /* ignore */ }
 }
 
 let fluctDebounce = null;
-function updateFluctuation(val) {
-    const pct = parseInt(val, 10);
-    const label = document.getElementById('fluct-pct');
-    if (label) label.textContent = pct + '%';
+function updateFluctSliders() {
+    const floorVal = parseInt(document.getElementById('fluct-floor').value, 10);
+    const ceilVal = parseInt(document.getElementById('fluct-ceil').value, 10);
+    const floorLabel = document.getElementById('fluct-floor-pct');
+    const ceilLabel = document.getElementById('fluct-ceil-pct');
+    if (floorLabel) floorLabel.textContent = floorVal + '%';
+    if (ceilLabel) ceilLabel.textContent = ceilVal + '%';
 
-    // Debounce the API call so dragging doesn't spam
     if (fluctDebounce) clearTimeout(fluctDebounce);
     fluctDebounce = setTimeout(async () => {
         try {
             await api('PUT', '/api/fluctuation', {
-                amplitude: pct / 100,
+                floor: floorVal / 100,
+                ceiling: ceilVal / 100,
                 period: '1h',
             });
         } catch (e) { /* ignore */ }

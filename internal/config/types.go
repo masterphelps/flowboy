@@ -58,18 +58,43 @@ type Collector struct {
 }
 
 // Fluctuation controls sine-wave rate variation.
+// Floor and Ceiling define the range as multipliers of the base rate.
+// When sin=-1, rate = base * Floor. When sin=1, rate = base * Ceiling.
+// Amplitude is kept for backward compat: if Floor/Ceiling are zero but
+// Amplitude is set, it maps to Floor=1-Amplitude, Ceiling=1+Amplitude.
 type Fluctuation struct {
-	Amplitude float64       `yaml:"amplitude" json:"amplitude"`           // 0.0-1.0, default 0.3
-	Period    time.Duration `yaml:"period" json:"period"`                 // default 1h
-	Phase     time.Duration `yaml:"phase,omitempty" json:"phase,omitempty"` // offset, default 0
+	Amplitude float64       `yaml:"amplitude,omitempty" json:"amplitude,omitempty"` // legacy symmetric
+	Floor     float64       `yaml:"floor,omitempty" json:"floor,omitempty"`         // e.g. 0.8 = -20%
+	Ceiling   float64       `yaml:"ceiling,omitempty" json:"ceiling,omitempty"`     // e.g. 1.3 = +30%
+	Period    time.Duration `yaml:"period" json:"period"`
+	Phase     time.Duration `yaml:"phase,omitempty" json:"phase,omitempty"`
+}
+
+// EffectiveRange returns the floor and ceiling multipliers, resolving
+// legacy Amplitude if Floor/Ceiling aren't set.
+func (f *Fluctuation) EffectiveRange() (floor, ceiling float64) {
+	if f.Floor != 0 || f.Ceiling != 0 {
+		floor = f.Floor
+		ceiling = f.Ceiling
+		if floor == 0 {
+			floor = 1.0
+		}
+		if ceiling == 0 {
+			ceiling = 1.0
+		}
+		return
+	}
+	// Legacy: symmetric from Amplitude
+	return 1.0 - f.Amplitude, 1.0 + f.Amplitude
 }
 
 // DefaultFluctuation returns fluctuation with sensible defaults.
 func DefaultFluctuation() Fluctuation {
 	return Fluctuation{
-		Amplitude: 0.3,
-		Period:    time.Hour,
-		Phase:     0,
+		Floor:   0.7,
+		Ceiling: 1.3,
+		Period:  time.Hour,
+		Phase:   0,
 	}
 }
 

@@ -722,28 +722,30 @@ func (s *Server) handleFluctuation(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		f := s.engine.GlobalFluctuation()
 		if f == nil {
-			writeJSON(w, http.StatusOK, map[string]any{"amplitude": 0, "period": "1h", "phase": "0s"})
+			writeJSON(w, http.StatusOK, map[string]any{"floor": 1.0, "ceiling": 1.0, "period": "1h"})
 			return
 		}
+		floor, ceiling := f.EffectiveRange()
 		writeJSON(w, http.StatusOK, map[string]any{
-			"amplitude": f.Amplitude,
-			"period":    f.Period.String(),
-			"phase":     f.Phase.String(),
+			"floor":   floor,
+			"ceiling": ceiling,
+			"period":  f.Period.String(),
 		})
 	case http.MethodPut:
 		var req struct {
-			Amplitude float64 `json:"amplitude"`
-			Period    string  `json:"period"`
+			Floor   float64 `json:"floor"`
+			Ceiling float64 `json:"ceiling"`
+			Period  string  `json:"period"`
 		}
 		if err := readJSON(r, &req); err != nil {
 			http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		if req.Amplitude < 0 {
-			req.Amplitude = 0
+		if req.Floor < 0 {
+			req.Floor = 0
 		}
-		if req.Amplitude > 1 {
-			req.Amplitude = 1
+		if req.Ceiling < req.Floor {
+			req.Ceiling = req.Floor
 		}
 		period := time.Hour
 		if req.Period != "" {
@@ -752,16 +754,18 @@ func (s *Server) handleFluctuation(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		f := &config.Fluctuation{
-			Amplitude: req.Amplitude,
-			Period:    period,
+			Floor:   req.Floor,
+			Ceiling: req.Ceiling,
+			Period:  period,
 		}
 		s.engine.SetGlobalFluctuation(f)
-		// Persist to config
 		s.config.Fluctuation = f
 		s.saveConfig()
+		floor, ceiling := f.EffectiveRange()
 		writeJSON(w, http.StatusOK, map[string]any{
-			"amplitude": f.Amplitude,
-			"period":    f.Period.String(),
+			"floor":   floor,
+			"ceiling": ceiling,
+			"period":  f.Period.String(),
 		})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

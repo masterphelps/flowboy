@@ -47,14 +47,26 @@ func TestFlowDefaults(t *testing.T) {
 
 func TestFluctuationDefaults(t *testing.T) {
 	f := DefaultFluctuation()
-	if f.Amplitude != 0.3 {
-		t.Errorf("expected amplitude 0.3, got %f", f.Amplitude)
+	if f.Floor != 0.7 {
+		t.Errorf("expected floor 0.7, got %f", f.Floor)
+	}
+	if f.Ceiling != 1.3 {
+		t.Errorf("expected ceiling 1.3, got %f", f.Ceiling)
 	}
 	if f.Period != time.Hour {
 		t.Errorf("expected period 1h, got %v", f.Period)
 	}
-	if f.Phase != 0 {
-		t.Errorf("expected phase 0, got %v", f.Phase)
+	floor, ceiling := f.EffectiveRange()
+	if floor != 0.7 || ceiling != 1.3 {
+		t.Errorf("EffectiveRange: expected 0.7/1.3, got %f/%f", floor, ceiling)
+	}
+}
+
+func TestFluctuationLegacyAmplitude(t *testing.T) {
+	f := Fluctuation{Amplitude: 0.3, Period: time.Hour}
+	floor, ceiling := f.EffectiveRange()
+	if floor != 0.7 || ceiling != 1.3 {
+		t.Errorf("legacy amplitude: expected 0.7/1.3, got %f/%f", floor, ceiling)
 	}
 }
 

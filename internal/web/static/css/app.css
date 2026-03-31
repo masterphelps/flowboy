@@ -1011,11 +1011,11 @@ button:hover {
     50% { opacity: 0.5; }
 }
 
-/* ──── Fluctuation Slider ──── */
+/* ──── Fluctuation Sliders ──── */
 .fluctuation-control {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     font-size: 10px;
     color: #8df776;
     letter-spacing: 1px;
@@ -1024,12 +1024,19 @@ button:hover {
 .fluctuation-control label {
     color: #d8c99e;
     font-size: 10px;
+    margin-right: 2px;
+}
+
+.fluct-label {
+    color: #555;
+    font-size: 11px;
+    font-weight: bold;
 }
 
 .fluctuation-control input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
-    width: 60px;
+    width: 50px;
     height: 4px;
     background: #333;
     border-radius: 2px;
@@ -1056,9 +1063,10 @@ button:hover {
     cursor: pointer;
 }
 
-#fluct-pct {
-    min-width: 28px;
+#fluct-floor-pct, #fluct-ceil-pct {
+    min-width: 32px;
     text-align: right;
+    font-size: 10px;
 }
 
 /* Anomaly highlighting — ONLY place non-standard colors are used */

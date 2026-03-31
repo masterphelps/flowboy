@@ -28,11 +28,16 @@ func fluctuateRate(rate config.Rate, interval time.Duration, now time.Time, perF
 	base := float64(bpi)
 
 	if fluct != nil && fluct.Period > 0 {
-		// Use Unix nanoseconds + phase offset, mod period, to get position in cycle
+		floor, ceiling := fluct.EffectiveRange()
+		// sin ranges -1 to 1; map to floor..ceiling
 		t := now.UnixNano() + int64(fluct.Phase)
 		pos := t % int64(fluct.Period)
-		phase := 2 * math.Pi * float64(pos) / float64(fluct.Period)
-		base = base + base*fluct.Amplitude*math.Sin(phase)
+		sinVal := math.Sin(2 * math.Pi * float64(pos) / float64(fluct.Period))
+		// Map sin [-1,1] to [floor, ceiling]
+		mid := (floor + ceiling) / 2
+		halfRange := (ceiling - floor) / 2
+		multiplier := mid + halfRange*sinVal
+		base = base * multiplier
 	}
 
 	// Apply jitter: ±5%
